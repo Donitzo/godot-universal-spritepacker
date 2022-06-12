@@ -28,6 +28,6 @@ The image names should have one of the following formats:
 
 `sprite_name__<x>x<y>p<p>.png/bmp/jpg/jpeg`: P is the padding between sprites.
 
-`sprite_name.png/bmp/jpg/jpeg`: The file is copied as-is.
+`sprite_name.png/bmp/jpg/jpeg`: The file is used as-is.
 
 `sprite_name.svg`: The vector file is exported by layer.
