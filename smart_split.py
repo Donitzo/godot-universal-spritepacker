@@ -1,7 +1,7 @@
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 __author__  = 'Donitz'
 __license__ = 'MIT'
-__repository__ = 'github'
+__repository__ = 'https://github.com/Donitzo/smart_splitter'
 
 # Requires the "pillow" and "rectpack" packages
 # "pip install pillow rectpack"
@@ -75,25 +75,24 @@ for root, dirs, filenames in os.walk(args.source_directory):
                                 'image': Image.open(f).copy(),
                             })
 
-                        while os.path.exists(image_path):
-                            try:
-                                os.remove(image_path)
-                            except OSError:
-                                time.sleep(1)
-
-                                print('Failed to delete temporary file')
-
-                        break
-
                     if attempt == 9:
                         sys.exit('Error exporting layer')
                     else:
                         time.sleep(1)
 
+                while os.path.exists(image_path):
+                    try:
+                        os.remove(image_path)
+                    except OSError:
+                        time.sleep(1)
+
+                        print('Failed to delete temporary file')
+
             continue
 
         if not extension.lower() in ['.png', '.bmp', '.jpg', '.jpeg']:
             print('Ignoring file "%s"' % source_path)
+
             continue
 
         parts = os.path.splitext(filename)[0].split('__')
