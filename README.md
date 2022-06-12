@@ -1,7 +1,7 @@
 # smart_splitter
 A python script for splitting images and vector files into spritesheets. 
 
-I always found it inconvenient to store a lot of sprites as individual images. Storing sprites in one large image is also very inconvenient due to the differing sizes. My solution has been to encode the sprite size in the filenames of many different spritesheets. A python script iterates the source directory and splits the sprites into different sizes. Finally a spritesheet is exported.
+I always found it inconvenient to store a lot of sprites as individual images. It also isn't a good idea to store all the sprites in one large image due to the differing sizes. My solution has been to encode the sprite size in the filenames of many different spritesheets. A python script iterates the source directory and splits the sprites into different sizes. Finally a spritesheet is exported.
 
 I used to rely on TexturePacker for generating the spritesheet after the splitting process. I later added the texture packing to the python script using the rectpack package.
 
