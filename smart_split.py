@@ -1,4 +1,4 @@
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/smart_splitter'
@@ -74,6 +74,8 @@ for root, dirs, filenames in os.walk(args.source_directory):
                                 'name': '%s/%s' % (name, re.sub('[^a-zA-Z0-9_ -]+', '', label)),
                                 'image': Image.open(f).copy(),
                             })
+
+                        break
 
                     if attempt == 9:
                         sys.exit('Error exporting layer')
