@@ -1,7 +1,17 @@
 # smart_splitter
-A python script for splitting images and vector files into spritesheets.
+A python script for splitting images and vector files into spritesheets. 
 
-# usage: 
+I always found it inconvenient to store a lot of sprites as individual images. Storing sprites in one large image is also very inconvenient due to the differing sizes. My solution for a long time has been to encode the sprite size in the filename in a directory structure containing all my sprites. A python script iterates the source directory and splits the sprites into different sizes. Finally a spritesheet is exported.
+
+I used to rely on TexturePacker for generating the spritesheet after the splitting process. I later added the texture packing to the python script using the rectpack package.
+
+# usage:
+The script uses the "rectpack" and "pillow" modules.
+
+`pip install pillow rectpack`
+
+The script uses a simple CLI:
+
 `smart_split.py [-h] [--image_directory IMAGE_DIRECTORY] [--inkscape_path INKSCAPE_PATH] source_directory spritesheet_path`
 
 The created spritesheet is in the form of a .PNG image and and .JSON file defining the coordinates of the sprites. The .JSON format SHOULD be compatible with the [PixiJS Spritesheet format](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts), although many features are left unused, such as rotation and trimming.
@@ -14,7 +24,10 @@ The `source_directory` should contain a folder structure of images which you wan
 
 The image names should have one of the following formats:
 
-`sprite_name__<x>x<y>.png/bmp/jpg/jpeg`: X/Y is the sprite size
-`sprite_name__<x>x<y>p<p>.png/bmp/jpg/jpeg`: P is the padding between sprites
+`sprite_name__<x>x<y>.png/bmp/jpg/jpeg`: X/Y is the sprite size.
+
+`sprite_name__<x>x<y>p<p>.png/bmp/jpg/jpeg`: P is the padding between sprites.
+
 `sprite_name.png/bmp/jpg/jpeg`: The file is copied as-is.
+
 `sprite_name.svg`: The vector file is exported by layer.
