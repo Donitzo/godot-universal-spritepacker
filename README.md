@@ -18,7 +18,7 @@ The created spritesheet is in the form of a .PNG image and and .JSON file defini
 
 A copy of the sprites are saved in `image_directory` if set. Useful if you just want to export images from a .SVG file.
 
-If you want to split .SVG files you need to set the --inkscape_path (defaults to `C:/Program Files/Inkscape/bin/inkscape`)
+If you want to split .SVG files you need to set the `--inkscape_path` (defaults to `C:/Program Files/Inkscape/bin/inkscape`)
 
 The `source_directory` should contain a folder structure of images which you want to split.
 
