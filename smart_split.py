@@ -1,4 +1,4 @@
-__version__ = '0.2.3'
+__version__ = '0.2.4'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/smart_splitter'
@@ -104,7 +104,7 @@ for root, dirs, filenames in os.walk(args.source_directory):
         if len(parts) == 1:
             print('Using single image "%s"' % source_path)
 
-            with open(image_path, 'rb') as f:
+            with open(source_path, 'rb') as f:
                 sprites.append({
                     'name': name,
                     'image': Image.open(f).copy(),
