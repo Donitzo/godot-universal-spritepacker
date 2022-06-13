@@ -1,4 +1,4 @@
-__version__ = '0.2.2'
+__version__ = '0.2.3'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/smart_splitter'
@@ -177,7 +177,16 @@ while True:
 
 spritesheet = Image.new('RGBA', (bin_size, bin_size), (0, 0, 0, 0))
 
-json_data = { 'frames': [] }
+json_data = { 'frames': [],
+    'meta': {
+        'app': 'https://github.com/Donitzo/smart_splitter',
+        'version': '1.0',
+        'image': os.path.basename('%s.png' % args.spritesheet_path),
+        'format': 'RGBA8888',
+        'size': { 'w': bin_size, 'h': bin_size },
+        'scale': '1'
+    }
+}
 
 for rect in packer.rect_list():
     b, x, y, w, h, index = rect
