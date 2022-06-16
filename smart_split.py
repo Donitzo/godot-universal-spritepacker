@@ -1,4 +1,4 @@
-__version__ = '0.2.4'
+__version__ = '0.3.4'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/smart_splitter'
@@ -163,12 +163,12 @@ while True:
     if bin_size == 65536:
         sys.exit('Error packing sprites')
 
-    packer = newPacker()
+    packer = newPacker(rotation=False)
     packer.add_bin(bin_size, bin_size)
 
     for i, sprite in enumerate(sprites):
         size = sprite['image'].size
-        packer.add_rect(size[0] + 2, size[0] + 2, i)
+        packer.add_rect(size[0] + 2, size[1] + 2, i)
 
     packer.pack()
 
@@ -184,12 +184,12 @@ json_data = { 'frames': [],
         'image': os.path.basename('%s.png' % args.spritesheet_path),
         'format': 'RGBA8888',
         'size': { 'w': bin_size, 'h': bin_size },
-        'scale': '1'
+        'scale': 1
     }
 }
 
 for rect in packer.rect_list():
-    b, x, y, w, h, index = rect
+    _, x, y, w, h, index = rect
 
     sprite = sprites[index]
 
@@ -199,10 +199,10 @@ for rect in packer.rect_list():
 
     json_data['frames'].append({
         'filename': sprite['name'],
-        'frame': { 'x': x + 1, 'y': y + 1, 'w': size[0], 'h': size[1]},
+        'frame': { 'x': x + 1, 'y': y + 1, 'w': size[0], 'h': size[1] },
         'rotated': False,
         'trimmed': False,
-        'spriteSourceSize': { 'x': 0, 'y': 0, 'w': size[0], 'h': size[1]},
+        'spriteSourceSize': { 'x': 0, 'y': 0, 'w': size[0], 'h': size[1] },
         'sourceSize': { 'w': size[0], 'h': size[1] }
     })
 
