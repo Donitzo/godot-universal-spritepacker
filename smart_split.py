@@ -1,4 +1,4 @@
-__version__ = '0.3.4'
+__version__ = '0.3.5'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/smart_splitter'
@@ -174,6 +174,8 @@ while True:
 
     if len(packer) > 0 and len(packer[0]) == len(sprites):
         break
+
+print('Creating spritesheet of size %ix%i' % (bin_size, bin_size))
 
 spritesheet = Image.new('RGBA', (bin_size, bin_size), (0, 0, 0, 0))
 
