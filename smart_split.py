@@ -1,4 +1,4 @@
-__version__ = '0.3.5'
+__version__ = '0.3.6'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/smart_splitter'
@@ -31,6 +31,7 @@ parser.add_argument('source_directory')
 parser.add_argument('spritesheet_path')
 parser.add_argument('--image_directory')
 parser.add_argument('--inkscape_path', default='C:/Program Files/Inkscape/bin/inkscape')
+parser.add_argument('--max_spritesheet_size', type=int, default=4096)
 args = parser.parse_args()
 
 print('Smart Sprite Splitter %s\n' % __version__)
@@ -158,59 +159,72 @@ if not args.image_directory is None:
 print('\nPacking %i sprites' % len(sprites))
 
 bin_size = 16
+bin_count = 1
+
 while True:
-    bin_size *= 2
-    if bin_size == 65536:
-        sys.exit('Error packing sprites')
+    if bin_size >= args.max_spritesheet_size:
+        bin_count += 1
+    else:
+        bin_size *= 2
 
     packer = newPacker(rotation=False)
-    packer.add_bin(bin_size, bin_size)
+
+    for _ in range(bin_count):
+        packer.add_bin(bin_size, bin_size)
 
     for i, sprite in enumerate(sprites):
         size = sprite['image'].size
+
+        if size[0] + 2 >= args.max_spritesheet_size or\
+            size[1] +2 >= args.max_spritesheet_size:
+            sys.exit('Sprite is too large')
+
         packer.add_rect(size[0] + 2, size[1] + 2, i)
 
     packer.pack()
 
-    if len(packer) > 0 and len(packer[0]) == len(sprites):
+    if len(packer) > 0 and len(packer.rect_list()) == len(sprites):
         break
 
-print('Creating spritesheet of size %ix%i' % (bin_size, bin_size))
+print('Sprites packed into %i spritesheets of size %ix%i' % (bin_count, bin_size, bin_size))
 
-spritesheet = Image.new('RGBA', (bin_size, bin_size), (0, 0, 0, 0))
+for b_i in range(bin_count):
+    path_prefix = '%s%s' % (args.spritesheet_path, '' if bin_count == 1 else '_%i' % b_i)
 
-json_data = { 'frames': [],
-    'meta': {
-        'app': 'https://github.com/Donitzo/smart_splitter',
-        'version': '1.0',
-        'image': os.path.basename('%s.png' % args.spritesheet_path),
-        'format': 'RGBA8888',
-        'size': { 'w': bin_size, 'h': bin_size },
-        'scale': 1
+    spritesheet = Image.new('RGBA', (bin_size, bin_size), (0, 0, 0, 0))
+
+    json_data = { 'frames': [],
+        'meta': {
+            'app': 'https://github.com/Donitzo/smart_splitter',
+            'version': '1.0',
+            'image': os.path.basename('%s.png' % path_prefix),
+            'format': 'RGBA8888',
+            'size': { 'w': bin_size, 'h': bin_size },
+            'scale': 1
+        }
     }
-}
 
-for rect in packer.rect_list():
-    _, x, y, w, h, index = rect
+    for rect in packer[b_i].rect_list():
+        x, y, w, h, index = rect
 
-    sprite = sprites[index]
+        sprite = sprites[index]
 
-    spritesheet.paste(sprite['image'], (x + 1, y + 1))
+        spritesheet.paste(sprite['image'], (x + 1, y + 1))
 
-    size = sprite['image'].size
+        size = sprite['image'].size
 
-    json_data['frames'].append({
-        'filename': sprite['name'],
-        'frame': { 'x': x + 1, 'y': y + 1, 'w': size[0], 'h': size[1] },
-        'rotated': False,
-        'trimmed': False,
-        'spriteSourceSize': { 'x': 0, 'y': 0, 'w': size[0], 'h': size[1] },
-        'sourceSize': { 'w': size[0], 'h': size[1] }
-    })
+        json_data['frames'].append({
+            'filename': sprite['name'],
+            'frame': { 'x': x + 1, 'y': y + 1, 'w': size[0], 'h': size[1] },
+            'rotated': False,
+            'trimmed': False,
+            'spriteSourceSize': { 'x': 0, 'y': 0, 'w': size[0], 'h': size[1] },
+            'sourceSize': { 'w': size[0], 'h': size[1] }
+        })
 
-spritesheet.save('%s.png' % args.spritesheet_path)
+    spritesheet.save('%s.png' % path_prefix)
 
-with open('%s.json' % args.spritesheet_path, 'w') as f:
-    json.dump(json_data, f, indent=4, sort_keys=True)
+    with open('%s.json' % path_prefix, 'w') as f:
+        json.dump(json_data, f, indent=4, sort_keys=True)
 
-print('Spritesheet created at "%s.png + .json"\n' % args.spritesheet_path)
+    print('Spritesheet created at "%s.png + .json"' % path_prefix)
