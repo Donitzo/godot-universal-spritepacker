@@ -1,4 +1,4 @@
-__version__ = '0.3.6'
+__version__ = '0.4.0'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/smart_splitter'
@@ -6,7 +6,11 @@ __repository__ = 'https://github.com/Donitzo/smart_splitter'
 # Requires the "pillow" and "rectpack" packages
 # "pip install pillow rectpack"
 
+# sprite frame csv format:
+# name; start_x; start_y; count_x; count_y; fps; loop
+
 import argparse
+import csv
 import json
 import os
 import re
@@ -30,6 +34,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('source_directory')
 parser.add_argument('spritesheet_path')
 parser.add_argument('--image_directory')
+parser.add_argument('--godot_sprites_directory')
 parser.add_argument('--inkscape_path', default='C:/Program Files/Inkscape/bin/inkscape')
 parser.add_argument('--max_spritesheet_size', type=int, default=4096)
 args = parser.parse_args()
@@ -37,10 +42,12 @@ args = parser.parse_args()
 print('Smart Sprite Splitter %s\n' % __version__)
 
 sprites = []
+sprite_frames = []
 
 for root, dirs, filenames in os.walk(args.source_directory):
     for filename in filenames:
         source_path = os.path.join(root, filename)
+        source_directory = os.path.dirname(source_path)
         rel_path = os.path.relpath(source_path, args.source_directory)
         prefix, extension = os.path.splitext(rel_path)
 
@@ -93,16 +100,20 @@ for root, dirs, filenames in os.walk(args.source_directory):
 
             continue
 
+        if extension.lower() == '.csv':
+            continue
+
         if not extension.lower() in ['.png', '.bmp', '.jpg', '.jpeg']:
             print('Ignoring file "%s"' % source_path)
 
             continue
 
-        parts = os.path.splitext(filename)[0].split('__')
+        match = re.search(r'^(.*?)__(\d+)x(\d+)(?:p(\d+))?(?:fps(\d+)(loop)?)?$', name)
 
-        if len(parts) > 2:
-            sys.exit('Invalid image name "%s"' % filename)
-        if len(parts) == 1:
+        if not match:
+            if '__' in name:
+                sys.exit('Invalid image name "%s"' % filename)
+
             print('Using single image "%s"' % source_path)
 
             with open(source_path, 'rb') as f:
@@ -110,35 +121,88 @@ for root, dirs, filenames in os.walk(args.source_directory):
                     'name': name,
                     'image': Image.open(f).copy(),
                 })
+
+            continue
+
+        print('Splitting tileset "%s"' % source_path)
+
+        groups = match.groups()
+
+        tile_width = int(groups[1])
+        tile_height = int(groups[2])
+
+        padding = 0 if groups[3] is None else int(groups[3])
+
+        im = Image.open(source_path)
+
+        full_width, full_height = im.size
+
+        start_x = list(range(0, full_width, tile_width + padding))
+        start_y = list(range(0, full_height, tile_height + padding))
+
+        tileset_sprites = []
+        tileset_grid = [[] for _ in start_x]
+
+        for x_i, x in enumerate(start_x):
+            x_s = str(x_i).zfill(len(str(len(start_x))))
+
+            for y_i, y in enumerate(start_y):
+                y_s = str(y_i).zfill(len(str(len(start_y))))
+
+                sprite = {
+                    'name': '%s__%sx%s' % (groups[0], y_s, x_s),
+                    'image': im.crop((x, y, x + tile_width, y + tile_height)),
+                }
+
+                sprites.append(sprite)
+                tileset_sprites.append(sprite)
+                tileset_grid[x_i].append(sprite)
+
+        sprite_frame = {
+            'name': groups[0],
+            'animations': [],
+        }
+
+        csv_path = os.path.join(source_directory, '%s.csv' % os.path.basename(groups[0]))
+
+        if os.path.exists(csv_path):
+            print('Reading animations from "%s"' % csv_path)
+
+            for sprite in tileset_sprites:
+                sprite['remove'] = True
+
+            with open(csv_path) as f:
+                lines = list(csv.reader(f, delimiter=';'))[1:]
+
+            for line in lines:
+                animation_sprites = []
+
+                for x_i in range(int(line[1]), int(line[3])):
+                    for y_i in range(int(line[2]), int(line[4])):
+                        sprite = tileset_grid[x_i][y_i]
+                        sprite['remove'] = False
+
+                        animation_sprites.append(sprite)
+
+                sprite_frame['animations'].append({
+                    'name': line[0],
+                    'sprites': animation_sprites,
+                    'framerate': args.default_framerate if line[5] is None else int(line[5]),
+                    'loop': line[6].lower().strip() != 'false',
+                })
+        elif not groups[4] is None:
+            sprite_frame['animations'].append({
+                'name': 'default',
+                'sprites': tileset_sprites,
+                'framerate': int(groups[4]),
+                'loop': groups[5] is not None,
+            })
         else:
-            print('Splitting tileset "%s"' % source_path)
+            continue
 
-            im = Image.open(source_path)
+        sprite_frames.append(sprite_frame)
 
-            full_width, full_height = im.size
-
-            dimensions = list(map(int, re.split(r'[xp]', parts[1])))
-            if len(dimensions) == 3:
-                tile_width, tile_height, padding = dimensions
-            elif len(dimensions) == 2:
-                tile_width, tile_height = dimensions
-                padding = 0
-            else:
-                sys.exit('Invalid image name "%s"' % filename)
-
-            start_x = list(range(0, full_width, tile_width + padding))
-            start_y = list(range(0, full_height, tile_height + padding))
-
-            for x_i, x in enumerate(start_x):
-                x_s = str(x_i).zfill(len(str(len(start_x))))
-
-                for y_i, y in enumerate(start_y):
-                    y_s = str(y_i).zfill(len(str(len(start_y))))
-
-                    sprites.append({
-                        'name': '%s__%sx%s' % (parts[0], y_s, x_s),
-                        'image': im.crop((x, y, x + tile_width, y + tile_height)),
-                    })
+sprites = list(filter(lambda sprite: not 'remove' in sprite or not sprite['remove'], sprites))
 
 if len(sprites) == 0:
     sys.exit('No sprites found')
@@ -148,11 +212,10 @@ if not args.image_directory is None:
 
     for sprite in sprites:
         image_path = os.path.join(args.image_directory, '%s.png' % sprite['name'])
+        image_directory = os.path.dirname(image_path)
 
-        if not os.path.exists(os.path.dirname(image_path)):
-            os.makedirs(os.path.dirname(image_path))
-
-            time.sleep(1)
+        if not os.path.exists(image_directory):
+            os.makedirs(image_directory)
 
         sprite['image'].save(image_path)
 
@@ -175,8 +238,8 @@ while True:
     for i, sprite in enumerate(sprites):
         size = sprite['image'].size
 
-        if size[0] + 2 >= args.max_spritesheet_size or\
-            size[1] +2 >= args.max_spritesheet_size:
+        if size[0] + 2 > args.max_spritesheet_size or\
+            size[1] + 2 > args.max_spritesheet_size:
             sys.exit('Sprite is too large')
 
         packer.add_rect(size[0] + 2, size[1] + 2, i)
@@ -186,10 +249,12 @@ while True:
     if len(packer) > 0 and len(packer.rect_list()) == len(sprites):
         break
 
-print('Sprites packed into %i spritesheets of size %ix%i' % (bin_count, bin_size, bin_size))
+print('Sprites packed into %i spritesheets of size %ix%i\n' % (bin_count, bin_size, bin_size))
 
 for b_i in range(bin_count):
     path_prefix = '%s%s' % (args.spritesheet_path, '' if bin_count == 1 else '_%i' % b_i)
+
+    png_path = '%s.png' % path_prefix
 
     spritesheet = Image.new('RGBA', (bin_size, bin_size), (0, 0, 0, 0))
 
@@ -219,12 +284,71 @@ for b_i in range(bin_count):
             'rotated': False,
             'trimmed': False,
             'spriteSourceSize': { 'x': 0, 'y': 0, 'w': size[0], 'h': size[1] },
-            'sourceSize': { 'w': size[0], 'h': size[1] }
+            'sourceSize': { 'w': size[0], 'h': size[1] },
         })
 
-    spritesheet.save('%s.png' % path_prefix)
+        if not args.godot_sprites_directory is None:
+            tres_path = os.path.join(args.godot_sprites_directory, '%s.tres' % sprite['name'])
+            tres_directory = os.path.dirname(tres_path)
+
+            if not os.path.exists(tres_directory):
+                os.makedirs(tres_directory)
+
+            with open(tres_path, 'w') as f:
+                f.write('''[gd_resource type="AtlasTexture" load_steps=2 format=2]
+
+[ext_resource path="res://textures/%s" type="Texture" id=1]
+
+[resource]
+atlas = ExtResource( 1 )
+region = Rect2( %i, %i, %i, %i )''' % (os.path.basename(png_path), x + 1, y + 1, size[0], size[1]))
+
+    spritesheet.save(png_path)
 
     with open('%s.json' % path_prefix, 'w') as f:
         json.dump(json_data, f, indent=4, sort_keys=True)
 
     print('Spritesheet created at "%s.png + .json"' % path_prefix)
+
+if not args.godot_sprites_directory is None:
+    print('Creating Godot sprites in "%s"' % args.godot_sprites_directory)
+
+    for sprite_frame in sprite_frames:
+        resource_string = ''
+        resource_index = 1
+
+        animation_string = '[ {'
+
+        for i, animation in enumerate(sprite_frame['animations']):
+            resource_indices = []
+
+            for sprite in animation['sprites']:
+                resource_string += '[ext_resource path="./%s.tres" type="Texture" id=%i]\n' % (
+                    os.path.basename(sprite['name']), resource_index)
+                resource_indices.append(resource_index)
+                resource_index += 1
+
+            animation_string += '''
+    "frames": [ %s ],
+    "loop": %s,
+    "name": "%s",
+    "speed": %i.0
+%s''' % (', '.join(['ExtResource( %i )' % i for i in resource_indices]),
+            str(animation['loop']).lower(),
+            re.sub('[\W -]', '', animation['name']), animation['framerate'],
+            '} ]' if i == len(sprite_frame['animations']) - 1 else '}, {')
+
+        tres_path = os.path.join(args.godot_sprites_directory, '%s.tres' % sprite_frame['name'])
+        tres_directory = os.path.dirname(tres_path)
+
+        if not os.path.exists(tres_directory):
+            os.makedirs(tres_directory)
+
+        with open(tres_path, 'w') as f:
+            f.write('''[gd_resource type="SpriteFrames" load_steps=%i format=2]
+
+%s
+[resource]
+animations = %s''' % (resource_index, resource_string, animation_string))
+
+print('\nCompleted\n')
