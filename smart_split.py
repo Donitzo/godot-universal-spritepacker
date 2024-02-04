@@ -1,4 +1,4 @@
-__version__ = '0.4.0'
+__version__ = '0.5.0'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/smart_splitter'
