@@ -41,7 +41,7 @@ args = parser.parse_args()
 
 print('Smart Sprite Splitter %s\n' % __version__)
 
-os.makedirs(os.path.dirname(spritesheet_path), exist_ok=True)
+os.makedirs(os.path.dirname(args.spritesheet_path), exist_ok=True)
 
 sprites = []
 sprite_frames = []
