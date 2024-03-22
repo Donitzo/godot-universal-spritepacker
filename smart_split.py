@@ -1,4 +1,4 @@
-__version__ = '0.5.0'
+__version__ = '0.5.1'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/smart_splitter'
@@ -40,6 +40,8 @@ parser.add_argument('--max_spritesheet_size', type=int, default=4096)
 args = parser.parse_args()
 
 print('Smart Sprite Splitter %s\n' % __version__)
+
+os.makedirs(os.path.dirname(spritesheet_path)), exist_ok=True)
 
 sprites = []
 sprite_frames = []
@@ -291,8 +293,7 @@ for b_i in range(bin_count):
             tres_path = os.path.join(args.godot_sprites_directory, '%s.tres' % sprite['name'])
             tres_directory = os.path.dirname(tres_path)
 
-            if not os.path.exists(tres_directory):
-                os.makedirs(tres_directory)
+            os.makedirs(os.path.dirname(tres_directory)), exist_ok=True)
 
             with open(tres_path, 'w') as f:
                 f.write('''[gd_resource type="AtlasTexture" load_steps=2 format=2]
