@@ -32,6 +32,8 @@ parser.add_argument('--source_directory', required=True,
     help='Directory containing source images, SVGs, tilesets or nested directories to be split and packed.')
 parser.add_argument('--spritesheet_path', required=True,
     help='Path (without extension) where the final packed spritesheet will be saved.')
+parser.add_argument('--save_json', action='store_true',
+    help='Whether to create metadata .json files together with the spritesheet.')
 parser.add_argument('--image_directory',
     help='Optional directory in which to export individual sprite images before packing.')
 parser.add_argument('--godot_sprites_directory',
@@ -338,10 +340,11 @@ region = Rect2(%i, %i, %i, %i)''' % (resource_path, x + 1, y + 1, size[0], size[
 
     spritesheet.save(png_path)
 
-    with open('%s.json' % path_prefix, 'w') as f:
-        json.dump(json_data, f, indent=4, sort_keys=True)
+    if args.save_json:
+        with open('%s.json' % path_prefix, 'w') as f:
+            json.dump(json_data, f, indent=4, sort_keys=True)
 
-    print('Spritesheet %i created at "%s.png" + "%s.json"' % (b_i, path_prefix, path_prefix))
+    print('Spritesheet %i created at "%s.png"' % (b_i, path_prefix))
 
 if not args.godot_sprites_directory is None:
     print('Creating Godot sprite frames in "%s"' % args.godot_sprites_directory)
