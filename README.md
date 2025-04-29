@@ -12,7 +12,7 @@ The tool intelligently packs images or SVG layers into one or more texture atlas
 
 The relative folder structure of your source files is preserved in sprite names for easier categorization.
 
-This tool was originally created as a lightweight alternative to [TexturePacker](https://www.codeandweb.com/texturepacker) for my retro game projects. I've used TexturePacker for years, as it is great if you need the features it provides. As I started using **Godot** more, I added support for exporting directly into Godot’s native `.tres` format. Occasionally, I also needed to export UI icons directly from vector files, making it easy to go from vector artwork to in-game assets.
+This tool was originally created as a lightweight alternative to [TexturePacker](https://www.codeandweb.com/texturepacker) for my retro game projects. I've used TexturePacker for years, as it is great if you need the features it provides. As I started using **Godot** more, I added support for exporting directly into Godot’s native `.tres` format. Occasionally, I also needed to export UI icons directly from vector files, making it easy to go from vector artwork to in-game assets. I used this when creating [Canvas Draw 2D](https://donitz.itch.io/canvas-draw-2d).
 
 > **Note:** Frame trimming (transparent border removal) and sprite rotation are **not** currently supported.
 
