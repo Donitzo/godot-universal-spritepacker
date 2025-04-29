@@ -14,7 +14,7 @@ The relative folder structure of your source files is preserved in sprite names 
 
 This tool was originally created as a lightweight alternative to [TexturePacker](https://www.codeandweb.com/texturepacker) for my retro game projects. I've used TexturePacker for years, as it is great if you need the features it provides. As I started using **Godot** more, I added support for exporting directly into Godot’s native `.tres` format.
 
-Occasionally, I also needed to export UI icons directly from vector files, making it easy to go from vector artwork to in-game assets. I used a single vector file with this packer when creating the icons for [Canvas Draw 2D](https://donitz.itch.io/canvas-draw-2d).
+Occasionally, I also needed to export UI icons directly from vector files, making it easy to go from vector artwork to in-game assets. For example, I used a single vector file with this packer when creating the icons for [Canvas Draw 2D](https://donitz.itch.io/canvas-draw-2d), making updating them a single-click ordeal.
 
 > **Note:** Frame trimming (transparent border removal) and sprite rotation are **not** currently supported.
 
