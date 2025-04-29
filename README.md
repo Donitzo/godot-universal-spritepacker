@@ -28,9 +28,10 @@ The tool follows these steps:
 2. Parses filenames to detect optional suffixes indicating tile size, frame rate, padding, etc.
 3. Splits images into individual sprites based on the specified tile size.
    - If the file is an SVG, each **layer** is exported as a separate sprite using [Inkscape](https://inkscape.org/).
-4. Optionally saves individual sprite images to the `image_directory`.
-5. Packs sprites into one or more optimized spritesheets (texture atlases).
-6. Generates metadata files:
+4. Optionally checks for the existence of a `.csv` file with multiple animation definitions for a single image.
+5. Optionally saves individual sprite images to the `image_directory`.
+6. Packs sprites into one or more optimized spritesheets (texture atlases).
+7. Generates metadata files:
    - (a) [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json`
    - (b) Godot 4 AtlasTexture `.tres` files
    - (c) Godot 4 SpriteFrames `.tres` files (for animations)
