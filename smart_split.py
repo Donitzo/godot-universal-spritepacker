@@ -35,6 +35,7 @@ parser.add_argument('source_directory')
 parser.add_argument('spritesheet_path')
 parser.add_argument('--image_directory')
 parser.add_argument('--godot_sprites_directory')
+parser.add_argument('--godot_spritesheet_resource', default='res://textures/sprites.png')
 parser.add_argument('--inkscape_path', default='C:/Program Files/Inkscape/bin/inkscape')
 parser.add_argument('--max_spritesheet_size', type=int, default=4096)
 args = parser.parse_args()
@@ -297,11 +298,11 @@ for b_i in range(bin_count):
             with open(tres_path, 'w') as f:
                 f.write('''[gd_resource type="AtlasTexture" load_steps=2 format=2]
 
-[ext_resource path="res://textures/%s" type="Texture" id=1]
+[ext_resource path="%s" type="Texture" id=1]
 
 [resource]
 atlas = ExtResource( 1 )
-region = Rect2( %i, %i, %i, %i )''' % (os.path.basename(png_path), x + 1, y + 1, size[0], size[1]))
+region = Rect2( %i, %i, %i, %i )''' % (args.godot_spritesheet_resource, x + 1, y + 1, size[0], size[1]))
 
     spritesheet.save(png_path)
 
