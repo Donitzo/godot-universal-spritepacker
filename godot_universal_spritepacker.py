@@ -200,8 +200,8 @@ for root, dirs, filenames in os.walk(args.source_directory):
                 y0 = int(line[2])
                 cx = int(line[3])
                 cy = int(line[4])
-                for x_i in range(x0, x0 + cx):
-                    for y_i in range(y0, y0 + cy):
+                for y_i in range(y0, y0 + cy):
+                    for x_i in range(x0, x0 + cx):
                         sprite = tileset_grid[x_i][y_i]
                         sprite['remove'] = False
 
