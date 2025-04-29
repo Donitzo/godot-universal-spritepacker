@@ -1,4 +1,4 @@
-__version__ = '0.5.0'
+__version__ = '0.9.0'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot_universal_spritepacker'
@@ -216,6 +216,7 @@ for root, dirs, filenames in os.walk(args.source_directory):
 
                 for sprite in animation_sprites:
                     sprite['animated'] = True
+
         elif not groups[4] is None:
             sprite_frame['animations'].append({
                 'name': 'default',
@@ -226,6 +227,7 @@ for root, dirs, filenames in os.walk(args.source_directory):
 
             for sprite in tileset_sprites:
                 sprite['animated'] = True
+
         else:
             continue
 
@@ -322,6 +324,7 @@ for b_i in range(bin_count):
         if not args.godot_sprites_directory is None and not sprite['animated']:
             tres_path = os.path.join(args.godot_sprites_directory, '%s.tres' % sprite['name'])
             tres_directory = os.path.dirname(tres_path)
+
             os.makedirs(tres_directory, exist_ok=True)
 
             with open(tres_path, 'w') as f:
@@ -346,6 +349,7 @@ if not args.godot_sprites_directory is None:
     for sprite_frame in sprite_frames:
         tres_path = os.path.join(args.godot_sprites_directory, f'{sprite_frame["name"]}.tres')
         tres_directory = os.path.dirname(tres_path)
+
         os.makedirs(tres_directory, exist_ok=True)
 
         sprite_frames_string = '[gd_resource type="SpriteFrames" format=3]\n\n'
