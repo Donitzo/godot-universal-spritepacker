@@ -161,11 +161,11 @@ for root, dirs, filenames in os.walk(args.source_directory):
         tileset_sprites = []
         tileset_grid = [[] for _ in start_x]
 
-        for x_i, x in enumerate(start_x):
-            x_s = str(x_i).zfill(len(str(len(start_x) - 1)))
+        for y_i, y in enumerate(start_y):
+            y_s = str(y_i).zfill(len(str(len(start_y) - 1)))
 
-            for y_i, y in enumerate(start_y):
-                y_s = str(y_i).zfill(len(str(len(start_y) - 1)))
+            for x_i, x in enumerate(start_x):
+                x_s = str(x_i).zfill(len(str(len(start_x) - 1)))
 
                 sprite = {
                     'name': '%s__%sx%s' % (groups[0], y_s, x_s),
