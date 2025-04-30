@@ -106,7 +106,7 @@ Jump;       0;       1;       4;       1;  12; false
 Run the tool with:
 
 ```bash
-python spritepacker.py --source_directory <source_dir> --spritesheet_path <output_path> [options]
+python godot_universal_spritepacker.py --source_directory <source_dir> --spritesheet_path <output_path> [options]
 ```
 
 ### Required Arguments
