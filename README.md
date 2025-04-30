@@ -117,6 +117,7 @@ python spritepacker.py --source_directory <source_dir> --spritesheet_path <outpu
 ### Optional Arguments
 | Argument                     | Description                                                                 |
 |:-----------------------------|:----------------------------------------------------------------------------|
+| `--save_json`                | Whether to save metadata .json files with sprite frames.                    |
 | `--image_directory`          | Directory to save individual sprite images before packing.                  |
 | `--godot_sprites_directory`  | Directory to output Godot `.tres` resource files.                           |
 | `--godot_resource_directory` | Internal Godot resource path for spritesheets (default: `res://textures/`). |
