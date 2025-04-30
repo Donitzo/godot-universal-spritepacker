@@ -4,7 +4,7 @@
 
 ## Description
 
-**Godot Universal SpritePacker** is a Python tool that splits, packs, and converts individual sprites, tilesets, and SVG layers into spritesheets and Godot-ready `.tres` resources:
+**Godot Universal SpritePacker** is a Python tool that splits, packs, and converts individual tilesets and SVG layers into spritesheets and Godot-ready `.tres` resources:
 * [AtlasTextures](https://docs.godotengine.org/en/stable/classes/class_atlastexture.html) for single sprites  
 * [SpriteFrames](https://docs.godotengine.org/en/stable/classes/class_spriteframes.html) for animations
 
