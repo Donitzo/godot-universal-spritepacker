@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "godot-universal-spritepacker"
+version = "1.0.2"
+description = "Simple sprite packer for Godot and other engines. Split, pack, and convert images/SVGs to spritesheets and Godot resources."
+authors = [
+    { name = "Donitz" }
+]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "Pillow",
+    "rectpack"
+]
+
+[project.urls]
+Homepage = "https://github.com/Donitzo/godot-universal-spritepacker"
+
+[project.scripts]
+godot_universal_spritepacker = "godot_universal_spritepacker.cli:main"
