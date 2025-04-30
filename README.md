@@ -5,18 +5,18 @@
 ## Description
 
 **Godot Universal SpritePacker** is a Python tool that splits, packs, and converts individual sprites, tilesets, and SVG layers into spritesheets and Godot-ready `.tres` resources:
-* [AtlasTextures](https://docs.godotengine.org/en/stable/classes/class_atlastexture.html) for single sprites
+* [AtlasTextures](https://docs.godotengine.org/en/stable/classes/class_atlastexture.html) for single sprites  
 * [SpriteFrames](https://docs.godotengine.org/en/stable/classes/class_spriteframes.html) for animations
 
 The tool intelligently packs images or SVG layers into one or more texture atlases (spritesheets) and generates either a [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json` metadata file or native Godot `.tres` resource files.
 
-The relative folder structure of your source files is preserved in sprite names for easier categorization.
+The relative folder structure of your source files is preserved in sprite names for easier categorization. Duplicate sprites are automatically merged to save space, unless explicitly disabled.
 
-Duplicate sprites are automatically merged to save space, unless explicitly disabled.
+I've used [TexturePacker](https://www.codeandweb.com/texturepacker) for years and think it’s a great option if you need the full range of features it provides. Later, I built the first version of this tool (called `smart_splitter`) for my own [retro JavaScript games](https://donitz.itch.io/sweet-hell). Managing sprites as individual files in organized folders, and converting them into optimized spritesheets, made iteration super convenient. As I started using Godot more, I extended the tool to export native `.tres` resources.
 
-This tool was originally created as a lightweight alternative to [TexturePacker](https://www.codeandweb.com/texturepacker) for my retro game projects. I've used TexturePacker for years and think it’s a great option if you need the full range of features it provides. As I began using **Godot** more, I added support for exporting directly into Godot’s native `.tres` format.
+I also occasionally needed to export UI icons directly from vector files, making it easy to go from vector artwork to in-game assets. For example, I used a single SVG with this packer when creating the icons for [Canvas Draw 2D](https://donitz.itch.io/canvas-draw-2d), turning updates into a single-click task.
 
-Occasionally, I also needed to export UI icons directly from vector files, making it easy to go from vector artwork to in-game assets. For example, I used a single vector file with this packer when creating the icons for [Canvas Draw 2D](https://donitz.itch.io/canvas-draw-2d), turning updates into a single-click task.
+Whether you're working with pixel art, SVG icons, or animations, I hope this tool helps simplify your 2D asset workflow too.
 
 > **Note:** Frame trimming (transparent border removal) and sprite rotation are **not** currently supported. If you rely on these optimizations, feel free to open an issue, or consider using TexturePacker, which offers robust support for them.
 ---
