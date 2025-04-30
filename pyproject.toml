@@ -21,7 +21,7 @@ dependencies = [
 Homepage = "https://github.com/Donitzo/godot-universal-spritepacker"
 
 [tool.setuptools.packages.find]
-include = ["godot_universal_spritepacker*"]
+include = ["src"]
 
 [project.scripts]
-godot_universal_spritepacker = "godot_universal_spritepacker.cli:main"
+godot_universal_spritepacker = "src.godot_universal_spritepacker:main"
