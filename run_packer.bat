@@ -1,6 +1,6 @@
 @echo off
 
-python "godot_universal_spritepacker.py"^
+godot_universal_spritepacker^
     --source_directory "./test_sprites"^
     --spritesheet_path "./godot/textures/spritesheet"^
     --godot_resource_directory "res://textures"^
