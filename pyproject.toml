@@ -9,7 +9,7 @@ description = "Simple sprite packer for Godot and other engines. Split, pack, an
 authors = [
     { name = "Donitz" }
 ]
-license = { text = "MIT" }
+license = "MIT"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
@@ -19,6 +19,9 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/Donitzo/godot-universal-spritepacker"
+
+[tool.setuptools.packages.find]
+include = ["godot_universal_spritepacker*"]
 
 [project.scripts]
 godot_universal_spritepacker = "godot_universal_spritepacker.cli:main"
