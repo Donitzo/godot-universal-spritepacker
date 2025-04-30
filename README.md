@@ -10,7 +10,7 @@
 
 It intelligently splits and packs images or vector layers into one or more texture atlases, preserving your folder structure and optionally generating [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json` files or native Godot resources. Duplicate sprites are automatically merged to save space, unless disabled.
 
-The relative folder structure of your source files is preserved in sprite names for easier categorization. Duplicate sprites are automatically merged to save space, unless explicitly disabled.
+## Why?
 
 I've used [TexturePacker](https://www.codeandweb.com/texturepacker) for years and think it’s a great option if you need the full range of features it provides. Later, I built the first version of this tool (called `smart_splitter`) for my own [retro JavaScript games](https://donitz.itch.io/sweet-hell). Managing sprites as individual files in organized folders, and converting them into optimized spritesheets, made iteration super convenient. As I started using Godot more, I extended the tool to export native `.tres` resources.
 
