@@ -16,8 +16,7 @@ This tool was originally created as a lightweight alternative to [TexturePacker]
 
 Occasionally, I also needed to export UI icons directly from vector files, making it easy to go from vector artwork to in-game assets. For example, I used a single vector file with this packer when creating the icons for [Canvas Draw 2D](https://donitz.itch.io/canvas-draw-2d), making updating them a single-click ordeal.
 
-> **Note:** Frame trimming (transparent border removal) and sprite rotation are **not** currently supported.
-
+> **Note:** Frame trimming (transparent border removal) and sprite rotation are **not** currently supported. If you rely on these optimizations, feel free to open an issue, or consider using TexturePacker, which offers robust support for them.
 ---
 
 ## How it works
