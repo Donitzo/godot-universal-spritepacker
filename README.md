@@ -120,7 +120,7 @@ python spritepacker.py --source_directory <source_dir> --spritesheet_path <outpu
 | `--save_json`                | Whether to save metadata .json files with sprite frames.                    |
 | `--image_directory`          | Directory to save individual sprite images before packing.                  |
 | `--godot_sprites_directory`  | Directory to output Godot `.tres` resource files.                           |
-| `--godot_resource_directory` | Internal Godot resource path for spritesheets (default: `res://textures/`). |
+| `--godot_resource_directory` | Internal Godot resource directory for spritesheets (default: `res://textures/`). |
 | `--inkscape_path`            | Custom path to the Inkscape executable for SVG processing.                  |
 | `--max_spritesheet_size`     | Maximum width/height for each spritesheet (default: `4096`).                |
 
