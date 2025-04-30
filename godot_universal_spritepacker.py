@@ -1,4 +1,4 @@
-__version__ = '0.9.0'
+__version__ = '1.0.0'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot_universal_spritepacker'
@@ -44,6 +44,11 @@ parser.add_argument('--inkscape_path', default='C:/Program Files/Inkscape/bin/in
     help='Path to the Inkscape executable. Used for extracting layers from SVG files.')
 parser.add_argument('--max_spritesheet_size', type=int, default=4096,
     help='Maximum width or height (in pixels) for the generated spritesheet. Default is 4096.')
+parser.add_argument('--sprite_padding', type=int, default=1,
+    help='Number of transparent pixels to pad around each sprite. Default is 1 = 2 px gap.')
+parser.add_argument('--disable_duplicate_removal', action='store_true',
+    help='If set, disables duplicate frame detection and removal.')
+
 args = parser.parse_args()
 
 print('Godot Universal SpritePacker %s\n' % __version__)
@@ -81,19 +86,22 @@ for root, dirs, filenames in os.walk(args.source_directory):
                 image_path = os.path.join(tempfile.gettempdir(),
                     'gus_%s.png' % os.urandom(12).hex())
 
-                result = subprocess.run([
-                    args.inkscape_path,
-                    source_path,
-                    '--export-area-drawing',
-                    '--export-type=png',
-                    '--export-id-only',
-                    '--export-id=%s' % layer_id,
-                    '--export-filename=%s' % image_path,
-                ])
+                try:
+                    result = subprocess.run([
+                        args.inkscape_path,
+                        source_path,
+                        '--export-area-drawing',
+                        '--export-type=png',
+                        '--export-id-only',
+                        '--export-id=%s' % layer_id,
+                        '--export-filename=%s' % image_path,
+                    ])
+                except FileNotFoundError:
+                    print('Unable to find Inkscape. Skipping vector conversion.')
+                    continue
 
                 if result.returncode != 0:
-                    print('Error converting sprite using Inkscape. Skipping vector conversion.')
-                    continue
+                    sys.exit('Error exporting SVG layer "%s" from "%s"' % (label, source_path))
 
                 for attempt in range(10):
                     if os.path.exists(image_path):
@@ -101,12 +109,13 @@ for root, dirs, filenames in os.walk(args.source_directory):
                             'name': '%s/%s' % (name, re.sub('[^a-zA-Z0-9_ -]+', '', label)),
                             'image': Image.open(image_path).convert('RGBA'),
                             'animated': False,
+                            'duplicate': None,
                         })
 
                         break
 
                     if attempt == 9:
-                        sys.exit('Error exporting layer')
+                        sys.exit('Error exporting SVG layer "%s" from "%s"' % (label, source_path))
                     else:
                         time.sleep(1)
 
@@ -140,6 +149,7 @@ for root, dirs, filenames in os.walk(args.source_directory):
                 'name': name,
                 'image': Image.open(source_path).convert('RGBA'),
                 'animated': False,
+                'duplicate': None,
             })
 
             continue
@@ -173,6 +183,7 @@ for root, dirs, filenames in os.walk(args.source_directory):
                     'name': '%s__%sx%s' % (groups[0], y_s, x_s),
                     'image': im.crop((x, y, x + tile_width, y + tile_height)),
                     'animated': False,
+                    'duplicate': None,
                 }
 
                 sprites.append(sprite)
@@ -195,7 +206,10 @@ for root, dirs, filenames in os.walk(args.source_directory):
             with open(csv_path) as f:
                 lines = list(csv.reader(f, delimiter=';'))[1:]
 
+
             for line in lines:
+                line = [cell.strip() for cell in line]
+
                 animation_sprites = []
 
                 x0 = int(line[1])
@@ -237,8 +251,24 @@ for root, dirs, filenames in os.walk(args.source_directory):
 
 sprites = list(filter(lambda sprite: not 'remove' in sprite or not sprite['remove'], sprites))
 
+if not args.disable_duplicate_removal:
+    print('\nChecking for duplicate sprites...')
+
+    for i, sprite in enumerate(sprites):
+        if sprite['duplicate'] is not None:
+            continue
+
+        data = list(sprite['image'].getdata())
+
+        for other in sprites[i + 1:]:
+            if other['duplicate'] is not None:
+                continue
+
+            if data == list(other['image'].getdata()):
+                other['duplicate'] = sprite
+
 if len(sprites) == 0:
-    sys.exit('No sprites found')
+    sys.exit('\nNo sprites found')
 
 if not args.image_directory is None:
     print('\nSaving sprite images in "%s"' % args.image_directory)
@@ -251,28 +281,35 @@ if not args.image_directory is None:
 
         sprite['image'].save(image_path)
 
-print('\nPacking %i sprites' % len(sprites))
+print('\nPacking %i sprites...' % len(sprites))
 
 bin_size = 32
 bin_count = 1
 max_side = args.max_spritesheet_size
+padding = args.sprite_padding
 
 while True:
     packer = newPacker(rotation=False)
     for _ in range(bin_count):
         packer.add_bin(bin_size, bin_size)
 
-    for i, sprite in enumerate(sprites):
+    non_duplicate_count = 0
+
+    for sprite in sprites:
+        if not sprite['duplicate'] is None:
+            continue
+        non_duplicate_count += 1
+
         w, h = sprite['image'].size
 
-        if w + 2 > max_side or h + 2 > max_side:
+        if w + padding * 2 > max_side or h + padding * 2 > max_side:
             sys.exit('Sprite "%s" is too large' % sprite["name"])
 
-        packer.add_rect(w + 2, h + 2, i)
+        packer.add_rect(w + padding * 2, h + padding * 2, sprite)
 
     packer.pack()
 
-    if len(packer) > 0 and len(packer.rect_list()) == len(sprites):
+    if len(packer) > 0 and len(packer.rect_list()) == non_duplicate_count:
         break
 
     if bin_size * 2 <= max_side:
@@ -280,7 +317,8 @@ while True:
     else:
         bin_count += 1
 
-print('Sprites packed into spritesheet of size %ix%i\n' % (bin_size, bin_size))
+print('\nPacked %i non-duplicate sprites (out of %i total) into %i spritesheet%s of size %ix%i\n' % (
+    non_duplicate_count, len(sprites), bin_count, '' if bin_count == 1 else 's', bin_size, bin_size))
 
 for b_i in range(bin_count):
     path_prefix = '%s%s' % (args.spritesheet_path, '' if bin_count == 1 else '_%i' % b_i)
@@ -300,27 +338,37 @@ for b_i in range(bin_count):
         }
     }
 
+    bin_sprites = []
+
     for rect in packer[b_i].rect_list():
-        x, y, w, h, index = rect
+        x, y, w, h, sprite = rect
 
-        sprite = sprites[index]
+        bin_sprites.append(sprite)
 
-        spritesheet.paste(sprite['image'], (x + 1, y + 1))
+        sw, sh = sprite['image'].size
 
-        size = sprite['image'].size
+        sprite['resource_path'] = args.godot_resource_directory.strip('/') + '/' + os.path.basename(png_path)
+        sprite['frame'] = { 'x': x + padding, 'y': y + padding, 'w': sw, 'h': sh }
 
-        resource_path = args.godot_resource_directory.strip('/') + '/' + os.path.basename(png_path)
+        spritesheet.paste(sprite['image'], (x + padding, y + padding))
 
-        sprite['frame'] = { 'x': x + 1, 'y': y + 1, 'w': size[0], 'h': size[1] }
-        sprite['resource_path'] = resource_path
+    for sprite in sprites:
+        if not sprite in bin_sprites and not sprite['duplicate'] in bin_sprites:
+            continue
+
+        if not sprite['duplicate'] is None:
+            sprite['resource_path'] = sprite['duplicate']['resource_path']
+            sprite['frame'] = sprite['duplicate']['frame']
+
+        sw, sh = sprite['image'].size
 
         json_data['frames'].append({
             'filename': sprite['name'],
             'frame': sprite['frame'],
             'rotated': False,
             'trimmed': False,
-            'spriteSourceSize': { 'x': 0, 'y': 0, 'w': size[0], 'h': size[1] },
-            'sourceSize': { 'w': size[0], 'h': size[1] },
+            'spriteSourceSize': { 'x': 0, 'y': 0, 'w': sw, 'h': sh },
+            'sourceSize': { 'w': sw, 'h': sh },
         })
 
         if not args.godot_sprites_directory is None and not sprite['animated']:
@@ -329,6 +377,8 @@ for b_i in range(bin_count):
 
             os.makedirs(tres_directory, exist_ok=True)
 
+            frame = sprite['frame']
+
             with open(tres_path, 'w') as f:
                 f.write('''[gd_resource type="AtlasTexture" format=2]
 
@@ -336,7 +386,7 @@ for b_i in range(bin_count):
 
 [resource]
 atlas = ExtResource(1)
-region = Rect2(%i, %i, %i, %i)''' % (resource_path, x + 1, y + 1, size[0], size[1]))
+region = Rect2(%i, %i, %i, %i)''' % (sprite['resource_path'], frame['x'], frame['y'], frame['w'], frame['h']))
 
     spritesheet.save(png_path)
 
@@ -347,7 +397,7 @@ region = Rect2(%i, %i, %i, %i)''' % (resource_path, x + 1, y + 1, size[0], size[
     print('Spritesheet %i created at "%s.png"' % (b_i, path_prefix))
 
 if not args.godot_sprites_directory is None:
-    print('Creating Godot sprite frames in "%s"' % args.godot_sprites_directory)
+    print('\nCreating Godot sprite frames in "%s"' % args.godot_sprites_directory)
 
     for sprite_frame in sprite_frames:
         tres_path = os.path.join(args.godot_sprites_directory, f'{sprite_frame["name"]}.tres')
@@ -375,9 +425,7 @@ if not args.godot_sprites_directory is None:
             frame_strings = []
 
             for sprite in animation['sprites']:
-                name = sprite['name']
-                fx, fy = sprite['frame']['x'], sprite['frame']['y']
-                fw, fh = sprite['frame']['w'], sprite['frame']['h']
+                frame = sprite['frame']
 
                 resource_id = resource_paths.index(sprite['resource_path']) + 1
 
@@ -385,7 +433,7 @@ if not args.godot_sprites_directory is None:
 atlas = ExtResource(%i)
 region = Rect2(%i, %i, %i, %i)
 
-''' % (sub_id, resource_id, fx, fy, fw, fh)
+''' % (sub_id, resource_id, frame['x'], frame['y'], frame['w'], frame['h'])
 
                 frame_strings.append('{"duration": 1.0, "texture": SubResource(%i)}' % sub_id)
 

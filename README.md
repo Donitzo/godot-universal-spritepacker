@@ -12,9 +12,11 @@ The tool intelligently packs images or SVG layers into one or more texture atlas
 
 The relative folder structure of your source files is preserved in sprite names for easier categorization.
 
-This tool was originally created as a lightweight alternative to [TexturePacker](https://www.codeandweb.com/texturepacker) for my retro game projects. I've used TexturePacker for years, as it is great if you need the features it provides. As I started using **Godot** more, I added support for exporting directly into Godot’s native `.tres` format.
+Duplicate sprites are automatically merged to save space, unless explicitly disabled.
 
-Occasionally, I also needed to export UI icons directly from vector files, making it easy to go from vector artwork to in-game assets. For example, I used a single vector file with this packer when creating the icons for [Canvas Draw 2D](https://donitz.itch.io/canvas-draw-2d), making updating them a single-click ordeal.
+This tool was originally created as a lightweight alternative to [TexturePacker](https://www.codeandweb.com/texturepacker) for my retro game projects. I've used TexturePacker for years and think it’s a great option if you need the full range of features it provides. As I began using **Godot** more, I added support for exporting directly into Godot’s native `.tres` format.
+
+Occasionally, I also needed to export UI icons directly from vector files, making it easy to go from vector artwork to in-game assets. For example, I used a single vector file with this packer when creating the icons for [Canvas Draw 2D](https://donitz.itch.io/canvas-draw-2d), turning updates into a single-click task.
 
 > **Note:** Frame trimming (transparent border removal) and sprite rotation are **not** currently supported. If you rely on these optimizations, feel free to open an issue, or consider using TexturePacker, which offers robust support for them.
 ---
@@ -46,7 +48,7 @@ The tool follows these steps:
 pip install pillow rectpack
 ```
 
-- [Inkscape](https://inkscape.org/) (optional, for SVG layer processing)  
+- [Inkscape](https://inkscape.org/) (optional, for SVG layer processing)
   If Inkscape is not installed at the default path, set it manually using `--inkscape_path`.
 
 ---
@@ -114,14 +116,16 @@ python spritepacker.py --source_directory <source_dir> --spritesheet_path <outpu
 | `--spritesheet_path` | Output path (without extension) for the spritesheet(s). |
 
 ### Optional Arguments
-| Argument                     | Description                                                                 |
-|:-----------------------------|:----------------------------------------------------------------------------|
-| `--save_json`                | Whether to save metadata .json files with sprite frames.                    |
-| `--image_directory`          | Directory to save individual sprite images before packing.                  |
-| `--godot_sprites_directory`  | Directory to output Godot `.tres` resource files.                           |
+| Argument                     | Description                                                                      |
+|:-----------------------------|:---------------------------------------------------------------------------------|
+| `--save_json`                | Whether to save metadata .json files with sprite frames.                         |
+| `--image_directory`          | Directory to save individual sprite images before packing.                       |
+| `--godot_sprites_directory`  | Directory to output Godot `.tres` resource files.                                |
 | `--godot_resource_directory` | Internal Godot resource directory for spritesheets (default: `res://textures/`). |
-| `--inkscape_path`            | Custom path to the Inkscape executable for SVG processing.                  |
-| `--max_spritesheet_size`     | Maximum width/height for each spritesheet (default: `4096`).                |
+| `--inkscape_path`            | Custom path to the Inkscape executable for SVG processing.                       |
+| `--max_spritesheet_size`     | Maximum width/height for each spritesheet (default: `4096`).                     |
+| `--sprite_padding`           | Transparent pixels around each sprite . Default is `1` = 2 px total gap.         |
+| `--disable_duplicate_removal`| If set, disables automatic merging of visually identical sprites.                |
 
 ---
 
