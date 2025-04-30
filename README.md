@@ -10,15 +10,17 @@
 
 It intelligently splits and packs images or vector layers into one or more texture atlases, preserving your folder structure and optionally generating [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json` files or native Godot resources. Duplicate sprites are automatically merged to save space, unless disabled.
 
+> **Note:** Frame trimming (transparent border removal) and sprite rotation are **not** currently supported. If you rely on these optimizations, feel free to open an issue—or consider using TexturePacker, which offers robust support for them.
+
 ### Why?
 
-I've used [TexturePacker](https://www.codeandweb.com/texturepacker) for years and think it’s a great option if you need the full range of features it provides. Later, I built the first version of this tool (called `smart_splitter`) for my own [retro JavaScript games](https://donitz.itch.io/sweet-hell). Managing sprites as individual files in organized folders—and converting them into optimized spritesheets—made iteration super convenient. As I started using Godot more, I extended the tool to export native `.tres` resources.
+I've used [TexturePacker](https://www.codeandweb.com/texturepacker) for years and still think it’s a great option if you need the full range of features it provides. But over time, I realized I didn’t actually need most of them. I had already written custom importers for its metadata formats in my own [retro JavaScript games](https://donitz.itch.io/sweet-hell), and the actual task of packing sprites turned out to be straightforward thanks to the excellent [rectpack](https://github.com/secnot/rectpack) module.
+
+This led me to build the first version of this tool (originally called `smart_splitter`), focused on a workflow where sprites/tilesets are kept as individual files in a categorical folder structure and automatically packed into spritesheets. That setup made iteration super convenient. Later, as I started using Godot more, I extended the tool to export native `.tres` resources as well.
 
 I also occasionally needed to export UI icons directly from vector files, making it easy to go from vector artwork to in-game assets. For example, I used a single SVG with this packer when creating the icons for [Canvas Draw 2D](https://donitz.itch.io/canvas-draw-2d), turning updates into a single-click task.
 
 Whether you're working with pixel art, SVG icons, or animations, I hope this tool helps simplify your 2D asset workflow too.
-
-> **Note:** Frame trimming (transparent border removal) and sprite rotation are **not** currently supported. If you rely on these optimizations, feel free to open an issue—or consider using TexturePacker, which offers robust support for them.
 
 ---
 
