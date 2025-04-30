@@ -1,7 +1,11 @@
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot_universal_spritepacker'
+
+# --------------------------------------------------------------------------------------------------
+# Imports and type definitions
+# --------------------------------------------------------------------------------------------------
 
 import argparse
 import csv
@@ -12,24 +16,84 @@ import subprocess
 import sys
 import tempfile
 import time
+import xml.etree.ElementTree as ET
 
 from PIL import Image
-from rectpack import newPacker
-from xml.etree import ElementTree as ET
+from rectpack import newPacker, PackerBFF # type: ignore[import-untyped]
+from typing import cast, Dict, List, Optional, Tuple, TypedDict
 
+# Minimum and maximum supported Python versions
 class UnsupportedVersion(Exception):
     pass
 
-MIN_VERSION, VERSION_LESS_THAN = (3, 8), (4, 0)
+MIN_VERSION, VERSION_LESS_THAN = (3, 9), (4, 0)
 if sys.version_info < MIN_VERSION or sys.version_info >= VERSION_LESS_THAN:
     raise UnsupportedVersion('requires Python %s,<%s' %
         ('.'.join(map(str, MIN_VERSION)), '.'.join(map(str, VERSION_LESS_THAN))))
 
-parser = argparse.ArgumentParser(description=
-    'Godot Universal SpritePacker — split, pack, and convert spritesheets' +
-    ' or SVGs into optimized atlases and SpriteFrames for Godot or other engines.')
+# TypedDict definitions for strong typing
+class SizeDict(TypedDict, total=True):
+    w: int
+    h: int
+
+class RectDict(TypedDict, total=True):
+    x: int
+    y: int
+    w: int
+    h: int
+
+class SpriteDict(TypedDict, total=True):
+    animated: bool
+    duplicate: Optional[SpriteDict]
+    frame: RectDict
+    image: Image.Image
+    name: str
+    remove: bool
+    resource_path: str
+
+class AnimationDict(TypedDict, total=True):
+    framerate: int
+    loop: bool
+    name: str
+    sprites: List[SpriteDict]
+
+class SpriteFrameDict(TypedDict, total=True):
+    animations: List[AnimationDict]
+    name: str
+
+class FrameEntryDict(TypedDict, total=True):
+    filename: str
+    frame: RectDict
+    rotated: bool
+    sourceSize: SizeDict
+    spriteSourceSize: RectDict
+    trimmed: bool
+
+class MetaDict(TypedDict, total=True):
+    app: str
+    format: str
+    image: str
+    scale: int
+    size: SizeDict
+    version: str
+
+class AtlasDict(TypedDict, total=True):
+    frames: List[FrameEntryDict]
+    meta: MetaDict
+
+RectTuple = Tuple[int, int, int, int, SpriteDict]
+
+# --------------------------------------------------------------------------------------------------
+# Command-line argument parsing
+# --------------------------------------------------------------------------------------------------
+
+parser: argparse.ArgumentParser = argparse.ArgumentParser(
+    description=
+        'Godot Universal SpritePacker — split, pack, and convert spritesheets' +
+        ' or SVGs into optimized atlases and SpriteFrames for Godot or other engines.'
+)
 parser.add_argument('--source_directory', required=True,
-    help='Directory containing source images, SVGs, tilesets or nested directories to be split and packed.')
+    help='Directory containing source images, SVGs or tilesets to be split and packed.')
 parser.add_argument('--spritesheet_path', required=True,
     help='Path (without extension) where the final packed spritesheet will be saved.')
 parser.add_argument('--save_json', action='store_true',
@@ -37,7 +101,7 @@ parser.add_argument('--save_json', action='store_true',
 parser.add_argument('--image_directory',
     help='Optional directory in which to export individual sprite images before packing.')
 parser.add_argument('--godot_sprites_directory',
-    help='If set, outputs Godot AtlasTextures and SpriteFrames compatible with Godot 4 to this directory.')
+    help='If set, outputs Godot 4 AtlasTextures and SpriteFrames to this directory.')
 parser.add_argument('--godot_resource_directory', default='res://textures/',
     help='Godot resource directory containing spritesheet images. Default is "res://textures/"')
 parser.add_argument('--inkscape_path', default='C:/Program Files/Inkscape/bin/inkscape',
@@ -49,45 +113,58 @@ parser.add_argument('--sprite_padding', type=int, default=1,
 parser.add_argument('--disable_duplicate_removal', action='store_true',
     help='If set, disables duplicate frame detection and removal.')
 
-args = parser.parse_args()
+args: argparse.Namespace = parser.parse_args()
 
 print('Godot Universal SpritePacker %s\n' % __version__)
 
-spritesheet_dir = os.path.dirname(args.spritesheet_path)
+# --------------------------------------------------------------------------------------------------
+# Prepare output directory
+# --------------------------------------------------------------------------------------------------
+
+spritesheet_dir: str = os.path.dirname(args.spritesheet_path)
 if spritesheet_dir != '':
     os.makedirs(spritesheet_dir, exist_ok=True)
 
-sprites = []
-sprite_frames = []
+# --------------------------------------------------------------------------------------------------
+# Create all individual sprites
+# --------------------------------------------------------------------------------------------------
+
+sprites: List[SpriteDict] = []
+sprite_frames: List[SpriteFrameDict] = []
 
 for root, dirs, filenames in os.walk(args.source_directory):
     for filename in filenames:
-        source_path = os.path.join(root, filename)
-        source_directory = os.path.dirname(source_path)
-        rel_path = os.path.relpath(source_path, args.source_directory)
+        source_path: str = os.path.join(root, filename)
+        source_directory: str = os.path.dirname(source_path)
+        rel_path: str = os.path.relpath(source_path, args.source_directory)
+        prefix: str
+        extension: str
         prefix, extension = os.path.splitext(rel_path)
 
-        name = prefix.replace('\\', '/')
+        name: str = prefix.replace('\\', '/')
         if name.startswith('./'):
             name = name[2:]
 
+        # SVG: split into layers via Inkscape
         if extension.lower() == '.svg':
             print('Splitting vector file "%s"' % source_path)
 
-            tree = ET.parse(source_path)
-            layers = tree.findall("./{http://www.w3.org/2000/svg}g[@{http://www.inkscape.org/namespaces/inkscape}groupmode='layer']")
+            tree: ET.ElementTree = ET.parse(source_path)
+            layers: List[ET.Element] = tree.findall("./{http://www.w3.org/2000/svg}" +
+                "g[@{http://www.inkscape.org/namespaces/inkscape}groupmode='layer']")
 
             for layer in layers:
-                layer_id = layer.attrib['id']
-                label = layer.attrib['{http://www.inkscape.org/namespaces/inkscape}label']
+                layer_id: str = layer.attrib['id']
+                label: str = layer.attrib['{http://www.inkscape.org/namespaces/inkscape}label']
 
                 print('-> Exporting layer "%s"' % label)
 
-                image_path = os.path.join(tempfile.gettempdir(),
+                image_path: str = os.path.join(tempfile.gettempdir(),
                     'gus_%s.png' % os.urandom(12).hex())
 
+                # call Inkscape to export one layer as PNG
                 try:
-                    result = subprocess.run([
+                    result: subprocess.CompletedProcess = subprocess.run([
                         args.inkscape_path,
                         source_path,
                         '--export-area-drawing',
@@ -103,14 +180,18 @@ for root, dirs, filenames in os.walk(args.source_directory):
                 if result.returncode != 0:
                     sys.exit('Error exporting SVG layer "%s" from "%s"' % (label, source_path))
 
+                # Wait for output file to appear
                 for attempt in range(10):
                     if os.path.exists(image_path):
-                        sprites.append({
-                            'name': '%s/%s' % (name, re.sub('[^a-zA-Z0-9_ -]+', '', label)),
-                            'image': Image.open(image_path).convert('RGBA'),
+                        sprites.append(cast(SpriteDict, {
                             'animated': False,
                             'duplicate': None,
-                        })
+                            'frame': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
+                            'image': Image.open(image_path).convert('RGBA'),
+                            'name': '%s/%s' % (name, re.sub('[^a-zA-Z0-9_ -]+', '', label)),
+                            'remove': False,
+                            'resource_path': '',
+                        }))
 
                         break
 
@@ -119,6 +200,7 @@ for root, dirs, filenames in os.walk(args.source_directory):
                     else:
                         time.sleep(1)
 
+                # Clean up temp file
                 while os.path.exists(image_path):
                     try:
                         os.remove(image_path)
@@ -129,6 +211,7 @@ for root, dirs, filenames in os.walk(args.source_directory):
 
             continue
 
+        # CSV files are always handled through images
         if extension.lower() == '.csv':
             continue
 
@@ -137,85 +220,101 @@ for root, dirs, filenames in os.walk(args.source_directory):
 
             continue
 
-        match = re.search(r'^(.*?)__(\d+)x(\d+)(?:p(\d+))?(?:fps(\d+)(loop)?)?$', name)
+        # Static image vs tileset detection
+        match: Optional[re.Match[str]] = re.search(
+            r'^(.*?)__(\d+)x(\d+)(?:p(\d+))?(?:fps(\d+)(loop)?)?$', name)
 
         if not match:
-            if '__' in name:
-                sys.exit('Invalid image name "%s"' % filename)
+            # Single image sprite
 
             print('Using single image "%s"' % source_path)
 
-            sprites.append({
-                'name': name,
-                'image': Image.open(source_path).convert('RGBA'),
+            sprites.append(cast(SpriteDict, {
                 'animated': False,
                 'duplicate': None,
-            })
+                'frame': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
+                'image': Image.open(source_path).convert('RGBA'),
+                'name': name,
+                'remove': False,
+                'resource_path': '',
+            }))
 
             continue
 
+        # Splitting image into a grid of sprites
+
         print('Splitting tileset "%s"' % source_path)
 
-        groups = match.groups()
+        groups: Tuple[Optional[str], ...] = match.groups()
 
-        tile_width = int(groups[1])
-        tile_height = int(groups[2])
+        image_name: str = groups[0] # type: ignore[assignment]
 
-        padding = 0 if groups[3] is None else int(groups[3])
+        im: Image.Image = Image.open(source_path).convert('RGBA')
 
-        im = Image.open(source_path).convert('RGBA')
-
+        full_width: int
+        full_height: int
         full_width, full_height = im.size
 
-        start_x = list(range(0, full_width, tile_width + padding))
-        start_y = list(range(0, full_height, tile_height + padding))
+        tile_width: int = int(groups[1]) # type: ignore[arg-type]
+        tile_height: int = int(groups[2]) # type: ignore[arg-type]
 
-        tileset_sprites = []
-        tileset_grid = [[] for _ in start_x]
+        tile_padding: int = 0 if groups[3] is None else int(groups[3])
 
+        start_x: List[int] = list(range(0, full_width, tile_width + tile_padding))
+        start_y: List[int] = list(range(0, full_height, tile_height + tile_padding))
+
+        tileset_sprites: List[SpriteDict] = []
+        tileset_grid: List[list[SpriteDict]] = [[] for _ in start_x]
+
+        # Crop out each sprite
         for y_i, y in enumerate(start_y):
-            y_s = str(y_i).zfill(len(str(len(start_y) - 1)))
+            y_s: str = str(y_i).zfill(len(str(len(start_y) - 1)))
 
             for x_i, x in enumerate(start_x):
-                x_s = str(x_i).zfill(len(str(len(start_x) - 1)))
+                x_s: str = str(x_i).zfill(len(str(len(start_x) - 1)))
 
-                sprite = {
-                    'name': '%s__%sx%s' % (groups[0], y_s, x_s),
-                    'image': im.crop((x, y, x + tile_width, y + tile_height)),
+                sprite: SpriteDict = {
                     'animated': False,
                     'duplicate': None,
+                    'frame': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
+                    'image': im.crop((x, y, x + tile_width, y + tile_height)),
+                    'name': '%s__%sx%s' % (image_name, y_s, x_s),
+                    'remove': False,
+                    'resource_path': '',
                 }
 
                 sprites.append(sprite)
                 tileset_sprites.append(sprite)
                 tileset_grid[x_i].append(sprite)
 
-        sprite_frame = {
-            'name': groups[0],
+        sprite_frame: SpriteFrameDict = {
             'animations': [],
+            'name': image_name,
         }
 
-        csv_path = os.path.join(source_directory, '%s.csv' % os.path.basename(groups[0]))
+        csv_path: str = os.path.join(source_directory, '%s.csv' % os.path.basename(image_name))
 
         if os.path.exists(csv_path):
+            # Collect animation definitions if .csv present
+
             print('Reading animations from "%s"' % csv_path)
 
             for sprite in tileset_sprites:
                 sprite['remove'] = True
 
             with open(csv_path) as f:
-                lines = list(csv.reader(f, delimiter=';'))[1:]
-
+                lines: List[List[str]] = list(csv.reader(f, delimiter=';'))[1:]
 
             for line in lines:
                 line = [cell.strip() for cell in line]
 
-                animation_sprites = []
+                animation_sprites: List[SpriteDict] = []
 
-                x0 = int(line[1])
-                y0 = int(line[2])
-                cx = int(line[3])
-                cy = int(line[4])
+                x0: int = int(line[1])
+                y0: int = int(line[2])
+                cx: int = int(line[3])
+                cy: int = int(line[4])
+
                 for y_i in range(y0, y0 + cy):
                     for x_i in range(x0, x0 + cx):
                         sprite = tileset_grid[x_i][y_i]
@@ -223,33 +322,48 @@ for root, dirs, filenames in os.walk(args.source_directory):
 
                         animation_sprites.append(sprite)
 
-                sprite_frame['animations'].append({
-                    'name': line[0],
-                    'sprites': animation_sprites,
+                sprite_frame['animations'].append(cast(AnimationDict, {
                     'framerate': int(line[5]),
                     'loop': line[6].lower().strip() != 'false',
-                })
+                    'name': line[0],
+                    'sprites': animation_sprites,
+                }))
 
                 for sprite in animation_sprites:
                     sprite['animated'] = True
-
         elif not groups[4] is None:
-            sprite_frame['animations'].append({
-                'name': 'default',
-                'sprites': tileset_sprites,
+            # Fallback default animation from filename
+
+            sprite_frame['animations'].append(cast(AnimationDict, {
                 'framerate': int(groups[4]),
                 'loop': groups[5] is not None,
-            })
+                'name': 'default',
+                'sprites': tileset_sprites,
+            }))
 
             for sprite in tileset_sprites:
                 sprite['animated'] = True
 
         else:
+            # Not an animation, treat as multiple sprites
+
             continue
 
         sprite_frames.append(sprite_frame)
 
-sprites = list(filter(lambda sprite: not 'remove' in sprite or not sprite['remove'], sprites))
+# --------------------------------------------------------------------------------------------------
+# Filter out any sprites marked for removal (due to .csv animations)
+# --------------------------------------------------------------------------------------------------
+
+sprites = list(filter(lambda sprite:
+    not 'remove' in sprite or not sprite['remove'], sprites))
+
+if len(sprites) == 0:
+    sys.exit('\nNo sprites found')
+
+# --------------------------------------------------------------------------------------------------
+# Duplicate sprite marking
+# --------------------------------------------------------------------------------------------------
 
 if not args.disable_duplicate_removal:
     print('\nChecking for duplicate sprites...')
@@ -258,7 +372,7 @@ if not args.disable_duplicate_removal:
         if sprite['duplicate'] is not None:
             continue
 
-        data = list(sprite['image'].getdata())
+        data: List[Tuple[int, int, int, int]] = list(sprite['image'].getdata())
 
         for other in sprites[i + 1:]:
             if other['duplicate'] is not None:
@@ -267,39 +381,46 @@ if not args.disable_duplicate_removal:
             if data == list(other['image'].getdata()):
                 other['duplicate'] = sprite
 
-if len(sprites) == 0:
-    sys.exit('\nNo sprites found')
+# --------------------------------------------------------------------------------------------------
+# Export each sprite as its own image
+# --------------------------------------------------------------------------------------------------
 
 if not args.image_directory is None:
     print('\nSaving sprite images in "%s"' % args.image_directory)
 
     for sprite in sprites:
         image_path = os.path.join(args.image_directory, '%s.png' % sprite['name'])
-        image_directory = os.path.dirname(image_path)
+        image_directory: str = os.path.dirname(image_path)
 
         os.makedirs(image_directory, exist_ok=True)
 
         sprite['image'].save(image_path)
 
+# --------------------------------------------------------------------------------------------------
+# Pack all sprites into one or more atlases via rectpack
+# --------------------------------------------------------------------------------------------------
+
 print('\nPacking %i sprites...' % len(sprites))
 
-bin_size = 32
-bin_count = 1
-max_side = args.max_spritesheet_size
-padding = args.sprite_padding
+bin_size: int = 32
+bin_count: int = 1
+max_side: int = args.max_spritesheet_size
+padding: int = args.sprite_padding
 
 while True:
-    packer = newPacker(rotation=False)
+    packer: PackerBFF = newPacker(rotation=False)
     for _ in range(bin_count):
         packer.add_bin(bin_size, bin_size)
 
-    non_duplicate_count = 0
+    non_duplicate_count: int = 0
 
     for sprite in sprites:
         if not sprite['duplicate'] is None:
             continue
         non_duplicate_count += 1
 
+        w: int
+        h: int
         w, h = sprite['image'].size
 
         if w + padding * 2 > max_side or h + padding * 2 > max_side:
@@ -317,41 +438,50 @@ while True:
     else:
         bin_count += 1
 
-print('\nPacked %i non-duplicate sprites (out of %i total) into %i spritesheet%s of size %ix%i\n' % (
-    non_duplicate_count, len(sprites), bin_count, '' if bin_count == 1 else 's', bin_size, bin_size))
+print('\nPacked %i non-duplicate sprites (out of %i total) into %i spritesheets of size %ix%i\n' % (
+    non_duplicate_count, len(sprites), bin_count, bin_size, bin_size))
+
+# --------------------------------------------------------------------------------------------------
+# Write out each packed atlas: PNG + JSON + Godot .tres files
+# --------------------------------------------------------------------------------------------------
 
 for b_i in range(bin_count):
-    path_prefix = '%s%s' % (args.spritesheet_path, '' if bin_count == 1 else '_%i' % b_i)
+    path_prefix: str = '%s%s' % (args.spritesheet_path, '' if bin_count == 1 else '_%i' % b_i)
+    png_path: str = '%s.png' % path_prefix
 
-    png_path = '%s.png' % path_prefix
-
-    spritesheet = Image.new('RGBA', (bin_size, bin_size), (0, 0, 0, 0))
-
-    json_data = { 'frames': [],
+    # Create blank atlas image
+    atlas_image: Image.Image = Image.new('RGBA', (bin_size, bin_size), (0, 0, 0, 0))
+    atlas_data: AtlasDict = {
+        'frames': [],
         'meta': {
             'app': 'Godot Universal SpritePacker',
-            'version': __version__,
-            'image': os.path.basename('%s.png' % path_prefix),
             'format': 'RGBA8888',
+            'image': os.path.basename('%s.png' % path_prefix),
+            'scale': 1,
             'size': { 'w': bin_size, 'h': bin_size },
-            'scale': 1
-        }
+            'version': __version__,
+        },
     }
 
-    bin_sprites = []
+    bin_sprites: List[SpriteDict] = []
 
+    rect: RectTuple
     for rect in packer[b_i].rect_list():
         x, y, w, h, sprite = rect
 
         bin_sprites.append(sprite)
 
+        sw: int
+        sh: int
         sw, sh = sprite['image'].size
 
-        sprite['resource_path'] = args.godot_resource_directory.strip('/') + '/' + os.path.basename(png_path)
+        sprite['resource_path'] = \
+            args.godot_resource_directory.strip('/') + '/' + os.path.basename(png_path)
         sprite['frame'] = { 'x': x + padding, 'y': y + padding, 'w': sw, 'h': sh }
 
-        spritesheet.paste(sprite['image'], (x + padding, y + padding))
+        atlas_image.paste(sprite['image'], (x + padding, y + padding))
 
+    # Build JSON frame entries
     for sprite in sprites:
         if not sprite in bin_sprites and not sprite['duplicate'] in bin_sprites:
             continue
@@ -362,22 +492,24 @@ for b_i in range(bin_count):
 
         sw, sh = sprite['image'].size
 
-        json_data['frames'].append({
+        atlas_data['frames'].append(cast(FrameEntryDict, {
             'filename': sprite['name'],
             'frame': sprite['frame'],
             'rotated': False,
-            'trimmed': False,
-            'spriteSourceSize': { 'x': 0, 'y': 0, 'w': sw, 'h': sh },
             'sourceSize': { 'w': sw, 'h': sh },
-        })
+            'spriteSourceSize': { 'x': 0, 'y': 0, 'w': sw, 'h': sh },
+            'trimmed': False,
+        }))
 
+        # Save a standalone AtlasTexture for Godot
         if not args.godot_sprites_directory is None and not sprite['animated']:
-            tres_path = os.path.join(args.godot_sprites_directory, '%s.tres' % sprite['name'])
-            tres_directory = os.path.dirname(tres_path)
+            tres_path: str = os.path.join(args.godot_sprites_directory, '%s.tres' % sprite['name'])
+            tres_directory: str = os.path.dirname(tres_path)
 
             os.makedirs(tres_directory, exist_ok=True)
 
-            frame = sprite['frame']
+            resource_path: str = sprite['resource_path']
+            frame: RectDict = sprite['frame']
 
             with open(tres_path, 'w') as f:
                 f.write('''[gd_resource type="AtlasTexture" format=2]
@@ -386,15 +518,19 @@ for b_i in range(bin_count):
 
 [resource]
 atlas = ExtResource(1)
-region = Rect2(%i, %i, %i, %i)''' % (sprite['resource_path'], frame['x'], frame['y'], frame['w'], frame['h']))
+region = Rect2(%i, %i, %i, %i)''' % (resource_path, frame['x'], frame['y'], frame['w'], frame['h']))
 
-    spritesheet.save(png_path)
+    atlas_image.save(png_path)
 
     if args.save_json:
         with open('%s.json' % path_prefix, 'w') as f:
-            json.dump(json_data, f, indent=4, sort_keys=True)
+            json.dump(atlas_data, f, indent=4, sort_keys=True)
 
     print('Spritesheet %i created at "%s.png"' % (b_i, path_prefix))
+
+# --------------------------------------------------------------------------------------------------
+# Save Godot SpriteFrames resources
+# --------------------------------------------------------------------------------------------------
 
 if not args.godot_sprites_directory is None:
     print('\nCreating Godot sprite frames in "%s"' % args.godot_sprites_directory)
@@ -405,9 +541,10 @@ if not args.godot_sprites_directory is None:
 
         os.makedirs(tres_directory, exist_ok=True)
 
-        sprite_frames_string = '[gd_resource type="SpriteFrames" format=3]\n\n'
+        sprite_frames_string: str = '[gd_resource type="SpriteFrames" format=3]\n\n'
 
-        resource_paths = []
+        resource_paths: List[str] = []
+        animation: AnimationDict
         for animation in sprite_frame['animations']:
             for sprite in animation['sprites']:
                 if not sprite['resource_path'] in resource_paths:
@@ -417,12 +554,12 @@ if not args.godot_sprites_directory is None:
 
         sprite_frames_string += '\n'
 
-        sub_id = 1
+        sub_id: int = 1
 
-        animation_strings = []
+        animation_strings: List[str] = []
 
         for animation in sprite_frame['animations']:
-            frame_strings = []
+            frame_strings: List[str] = []
 
             for sprite in animation['sprites']:
                 frame = sprite['frame']
