@@ -98,7 +98,7 @@ Jump;       0;       1;       4;       1;  12; false
 You can install the tool directly from GitHub. This installs a command-line tool called `godot_universal_spritepacker`:
 
 ```bash
-pip install git+https://github.com/Donitzo/godot_universal_spritepacker.git
+pip install pip@git+https://github.com/Donitzo/godot-universal-spritepacker
 ```
 
 ---
