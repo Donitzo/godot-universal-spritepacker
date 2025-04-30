@@ -92,6 +92,7 @@ Jump;       0;       1;       4;       1;  12; false
 - Python 3.9+
 - [Inkscape](https://inkscape.org/) (optional, for SVG layer processing)
   If Inkscape is not installed at the default path, set it manually using `--inkscape_path`.
+- Requires the Pillow and [rectpack](https://github.com/secnot/rectpack) modules.
 
 ## Installation
 
