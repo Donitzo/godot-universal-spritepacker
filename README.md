@@ -20,7 +20,7 @@ This led me to build the first version of this tool (originally called `smart_sp
 
 I also occasionally needed to export UI icons directly from vector files, making it easy to go from vector artwork to in-game assets. For example, I used a single SVG with this packer when creating the icons for [Canvas Draw 2D](https://donitz.itch.io/canvas-draw-2d), turning updates into a single-click task.
 
-Whether you're working with pixel art, SVG icons, or animations, I hope this tool helps simplify your 2D asset workflow too.
+I hope this tool helps simplify your 2D asset workflow too!
 
 ---
 
