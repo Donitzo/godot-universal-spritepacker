@@ -39,20 +39,6 @@ The tool follows these steps:
 
 ---
 
-## Requirements
-
-- **Python 3**
-- Install the required Python packages:
-
-```bash
-pip install pillow rectpack
-```
-
-- [Inkscape](https://inkscape.org/) (optional, for SVG layer processing)
-  If Inkscape is not installed at the default path, set it manually using `--inkscape_path`.
-
----
-
 ## File naming convention
 
 Files should be named according to this pattern:
@@ -101,12 +87,28 @@ Jump;       0;       1;       4;       1;  12; false
 
 ---
 
-## Command-Line Interface
+## Requirements
+
+- Python 3.9+
+- [Inkscape](https://inkscape.org/) (optional, for SVG layer processing)
+  If Inkscape is not installed at the default path, set it manually using `--inkscape_path`.
+
+## Installation
+
+You can install the tool directly from GitHub. This installs a command-line tool called `godot_universal_spritepacker`:
+
+```bash
+pip install git+https://github.com/Donitzo/godot_universal_spritepacker.git
+```
+
+---
+
+## Usage
 
 Run the tool with:
 
 ```bash
-python godot_universal_spritepacker.py --source_directory <source_dir> --spritesheet_path <output_path> [options]
+godot_universal_spritepacker --source_directory <source_dir> --spritesheet_path <output_path> [options]
 ```
 
 ### Required Arguments
@@ -124,7 +126,7 @@ python godot_universal_spritepacker.py --source_directory <source_dir> --sprites
 | `--godot_resource_directory` | Internal Godot resource directory for spritesheets (default: `res://textures/`). |
 | `--inkscape_path`            | Custom path to the Inkscape executable for SVG processing.                       |
 | `--max_spritesheet_size`     | Maximum width/height for each spritesheet (default: `4096`).                     |
-| `--sprite_padding`           | Transparent pixels around each sprite . Default is `1` = 2 pixel total gap.      |
+| `--sprite_padding`           | Transparent pixels around each sprite. Default is `1` = 2 pixel total gap.      |
 | `--disable_duplicate_removal`| If set, disables automatic merging of visually identical sprites.                |
 
 ---
