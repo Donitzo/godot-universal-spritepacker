@@ -44,7 +44,7 @@ class RectDict(TypedDict, total=True):
 
 class SpriteDict(TypedDict, total=True):
     animated: bool
-    duplicate: Optional[SpriteDict]
+    duplicate: Optional['SpriteDict']
     frame: RectDict
     image: Image.Image
     name: str
