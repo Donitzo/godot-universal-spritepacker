@@ -102,7 +102,11 @@ You can install the tool directly from GitHub. This installs a command-line tool
 pip install git+https://github.com/Donitzo/godot-universal-spritepacker.git
 ```
 
-or if you want, simply download and run `src/godot_universal_spritepacker.py`.
+Alternatively, you can simply download the script and run it directly:
+
+```bash
+python src/godot_universal_spritepacker.py
+```
 
 ---
 
