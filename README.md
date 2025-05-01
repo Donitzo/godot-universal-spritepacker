@@ -1,4 +1,4 @@
-# Godot Universal SpritePacker
+![Logo](https://github.com/Donitzo/godot-universal-spritepacker/blob/main/gus_logo.png)
 
 ![Example](https://github.com/Donitzo/godot-universal-spritepacker/blob/main/example.png)
 
