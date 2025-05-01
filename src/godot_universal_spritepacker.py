@@ -32,7 +32,7 @@ if sys.version_info < MIN_VERSION or sys.version_info >= VERSION_LESS_THAN:
         ('.'.join(map(str, MIN_VERSION)), '.'.join(map(str, VERSION_LESS_THAN))))
 
 # TypedDict definitions for strong typing
-class PointDict(TypedDict, total=True):
+class SizeDict(TypedDict, total=True):
     w: int
     h: int
 
@@ -67,7 +67,7 @@ class FrameEntryDict(TypedDict, total=True):
     filename: str
     frame: RectDict
     rotated: bool
-    sourceSize: PointDict
+    sourceSize: SizeDict
     spriteSourceSize: RectDict
     trimmed: bool
 
@@ -76,7 +76,7 @@ class MetaDict(TypedDict, total=True):
     format: str
     image: str
     scale: int
-    size: PointDict
+    size: SizeDict
     version: str
 
 class AtlasDict(TypedDict, total=True):
