@@ -19,7 +19,7 @@ import time
 import xml.etree.ElementTree as ET
 
 from PIL import Image
-from rectpack import newPacker, PackerBFF # type: ignore[import-untyped]
+from rectpack import newPacker, PackerBFF
 from typing import cast, Dict, List, Optional, Tuple, TypedDict
 
 # Minimum and maximum supported Python versions
