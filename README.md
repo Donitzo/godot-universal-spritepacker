@@ -10,7 +10,7 @@
 
 It intelligently splits and packs images or vector layers into one or more texture atlases, preserving your folder structure and optionally generating [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json` files or native Godot resources. Duplicate sprites are automatically merged to save space, unless disabled.
 
-> **Note:** Frame trimming (transparent border removal) and sprite rotation are **not** currently supported. If you rely on these optimizations, please open an issue and I'll go about adding them.
+> **Note:** Frame trimming (transparent border removal and pivot adjustment) and sprite rotation are **not** currently supported. If you rely on these optimizations, please open an issue and I'll go about adding them.
 
 ### Why?
 
