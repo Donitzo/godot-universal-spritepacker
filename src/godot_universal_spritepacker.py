@@ -391,7 +391,7 @@ def main() -> None:
     # ----------------------------------------------------------------------------------------------
 
     if not args.disable_trimming:
-        print('\nTrim sprites...')
+        print('\nTrimming sprites...')
 
         trimmed_count: int = 0
         trimmed_pixels: int = 0
