@@ -339,6 +339,8 @@ def main() -> None:
                         'sprites': animation_sprites,
                     }))
 
+                    print('-> Found animation "%s"' % line[0])
+
                     for sprite in animation_sprites:
                         sprite['animated'] = True
             elif not groups[4] is None:
