@@ -478,7 +478,7 @@ def main() -> None:
         else:
             bin_count += 1
 
-    print('\nPacked %i non-duplicate sprites (out of %i total) into %i spritesheets of size %ix%i\n'
+    print('Packed %i non-duplicate sprites (out of %i total) into %i spritesheets of size %ix%i\n'
         % (non_duplicate_count, len(sprites), bin_count, bin_size, bin_size))
 
     # ----------------------------------------------------------------------------------------------
