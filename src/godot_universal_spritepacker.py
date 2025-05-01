@@ -424,6 +424,8 @@ def main() -> None:
     if not args.disable_duplicate_removal:
         print('\nChecking for duplicate sprites...')
 
+        duplicates: int = 0
+
         for i, sprite in enumerate(sprites):
             if sprite['duplicate'] is not None:
                 continue
@@ -437,6 +439,9 @@ def main() -> None:
                 other_data = list(other['image'].getdata())
                 if len(data) == len(other_data) and data == other_data:
                     other['duplicate'] = sprite
+                    duplicates += 1
+
+        print('Found %i duplicate sprites' % duplicates)
 
     # ----------------------------------------------------------------------------------------------
     # Pack all sprites into one or more atlases via rectpack
