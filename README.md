@@ -65,7 +65,7 @@ boss_turret__WxH[pN][fpsN][loop]
 
 If the source file is located inside a subfolder, the relative path is included in the sprite's name (e.g., `enemies/boss__64x64.png`).
 
-Tiles are named using the format `subfolder_a/subfolder_b/original_name__RxC`, where `R` is the row index and `C` is the column index. Rows and columns are intentionally inverted from standard grid notation so that alphabetical sorting orders frames left to right.
+Sprites are named using the format `subfolder_a/subfolder_b/original_name__RxC`, where `R` is the row index and `C` is the column index. Rows and columns are intentionally inverted from standard grid notation so that alphabetical sorting orders sprites left to right.
 
 > **Note:** SVG files are always exported as individual sprites based on layer and the pixel resolution defined in the file. The filename is ignored.
 
