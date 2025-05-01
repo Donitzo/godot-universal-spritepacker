@@ -1,4 +1,4 @@
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot_universal_spritepacker'
@@ -32,7 +32,7 @@ if sys.version_info < MIN_VERSION or sys.version_info >= VERSION_LESS_THAN:
         ('.'.join(map(str, MIN_VERSION)), '.'.join(map(str, VERSION_LESS_THAN))))
 
 # TypedDict definitions for strong typing
-class SizeDict(TypedDict, total=True):
+class PointDict(TypedDict, total=True):
     w: int
     h: int
 
@@ -48,8 +48,10 @@ class SpriteDict(TypedDict, total=True):
     frame: RectDict
     image: Image.Image
     name: str
+    margin: RectDict
     remove: bool
     resource_path: str
+    trimmed: bool
 
 class AnimationDict(TypedDict, total=True):
     framerate: int
@@ -65,7 +67,7 @@ class FrameEntryDict(TypedDict, total=True):
     filename: str
     frame: RectDict
     rotated: bool
-    sourceSize: SizeDict
+    sourceSize: PointDict
     spriteSourceSize: RectDict
     trimmed: bool
 
@@ -74,7 +76,7 @@ class MetaDict(TypedDict, total=True):
     format: str
     image: str
     scale: int
-    size: SizeDict
+    size: PointDict
     version: str
 
 class AtlasDict(TypedDict, total=True):
@@ -111,6 +113,8 @@ def main() -> None:
         help='Maximum width or height (in pixels) for the generated spritesheet. Default is 4096.')
     parser.add_argument('--sprite_padding', type=int, default=1,
         help='Number of transparent pixels to pad around each sprite. Default is 1 = 2 px gap.')
+    parser.add_argument('--disable_trimming', action='store_true',
+        help='If set, disables transparency trimming.')
     parser.add_argument('--disable_duplicate_removal', action='store_true',
         help='If set, disables duplicate frame detection and removal.')
 
@@ -189,9 +193,11 @@ def main() -> None:
                                 'duplicate': None,
                                 'frame': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
                                 'image': Image.open(image_path).convert('RGBA'),
+                                'margin': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
                                 'name': '%s/%s' % (name, re.sub('[^a-zA-Z0-9_ -]+', '', label)),
                                 'remove': False,
                                 'resource_path': '',
+                                'trimmed': False,
                             }))
 
                             break
@@ -236,9 +242,11 @@ def main() -> None:
                     'duplicate': None,
                     'frame': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
                     'image': Image.open(source_path).convert('RGBA'),
+                    'margin': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
                     'name': name,
                     'remove': False,
                     'resource_path': '',
+                    'trimmed': False,
                 }))
 
                 continue
@@ -253,8 +261,6 @@ def main() -> None:
 
             im: Image.Image = Image.open(source_path).convert('RGBA')
 
-            full_width: int
-            full_height: int
             full_width, full_height = im.size
 
             tile_width: int = int(groups[1]) # type: ignore[arg-type]
@@ -280,9 +286,11 @@ def main() -> None:
                         'duplicate': None,
                         'frame': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
                         'image': im.crop((x, y, x + tile_width, y + tile_height)),
+                        'margin': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
                         'name': '%s__%sx%s' % (image_name, y_s, x_s),
                         'remove': False,
                         'resource_path': '',
+                        'trimmed': False,
                     }
 
                     sprites.append(sprite)
@@ -364,6 +372,52 @@ def main() -> None:
         sys.exit('\nNo sprites found')
 
     # ----------------------------------------------------------------------------------------------
+    # Export each sprite as its own image
+    # ----------------------------------------------------------------------------------------------
+
+    if not args.image_directory is None:
+        print('\nSaving sprite images in "%s"' % args.image_directory)
+
+        for sprite in sprites:
+            image_path = os.path.join(args.image_directory, '%s.png' % sprite['name'])
+            image_directory: str = os.path.dirname(image_path)
+
+            os.makedirs(image_directory, exist_ok=True)
+
+            sprite['image'].save(image_path)
+
+    # ----------------------------------------------------------------------------------------------
+    # Trimming
+    # ----------------------------------------------------------------------------------------------
+
+    if not args.disable_trimming:
+        print('\nTrim sprites...')
+
+        trimmed_count: int = 0
+        trimmed_pixels: int = 0
+
+        for sprite in sprites:
+            w, h = sprite['image'].size
+
+            bbox: Optional[Tuple[int, int, int, int]] = sprite['image'].getbbox()
+            if bbox is None:
+                bbox = (0, 0, 1, 1)
+
+            if bbox != (0, 0, w, h):
+                sprite['trimmed'] = True
+                sprite['image'] = sprite['image'].crop(bbox)
+                sprite['margin'] = {
+                    'x': bbox[0],
+                    'y': bbox[1],
+                    'w': w - (bbox[2] - bbox[0]),
+                    'h': h - (bbox[3] - bbox[1]),
+                }
+                trimmed_count += 1
+                trimmed_pixels += (w * h) - (sprite['image'].size[0] * sprite['image'].size[1])
+
+        print('Trimmed %i sprites for %i pixels' % (trimmed_count, trimmed_pixels))
+
+    # ----------------------------------------------------------------------------------------------
     # Duplicate sprite marking
     # ----------------------------------------------------------------------------------------------
 
@@ -380,23 +434,9 @@ def main() -> None:
                 if other['duplicate'] is not None:
                     continue
 
-                if data == list(other['image'].getdata()):
+                other_data = list(other['image'].getdata())
+                if len(data) == len(other_data) and data == other_data:
                     other['duplicate'] = sprite
-
-    # ----------------------------------------------------------------------------------------------
-    # Export each sprite as its own image
-    # ----------------------------------------------------------------------------------------------
-
-    if not args.image_directory is None:
-        print('\nSaving sprite images in "%s"' % args.image_directory)
-
-        for sprite in sprites:
-            image_path = os.path.join(args.image_directory, '%s.png' % sprite['name'])
-            image_directory: str = os.path.dirname(image_path)
-
-            os.makedirs(image_directory, exist_ok=True)
-
-            sprite['image'].save(image_path)
 
     # ----------------------------------------------------------------------------------------------
     # Pack all sprites into one or more atlases via rectpack
@@ -421,8 +461,6 @@ def main() -> None:
                 continue
             non_duplicate_count += 1
 
-            w: int
-            h: int
             w, h = sprite['image'].size
 
             if w + padding * 2 > max_side or h + padding * 2 > max_side:
@@ -473,8 +511,6 @@ def main() -> None:
 
             bin_sprites.append(sprite)
 
-            sw: int
-            sh: int
             sw, sh = sprite['image'].size
 
             sprite['resource_path'] = \
@@ -494,13 +530,18 @@ def main() -> None:
 
             sw, sh = sprite['image'].size
 
+            margin: RectDict = sprite['margin']
+
+            ow: int = sw + margin['w']
+            oh: int = sh + margin['h']
+
             atlas_data['frames'].append(cast(FrameEntryDict, {
                 'filename': sprite['name'],
                 'frame': sprite['frame'],
                 'rotated': False,
-                'sourceSize': { 'w': sw, 'h': sh },
-                'spriteSourceSize': { 'x': 0, 'y': 0, 'w': sw, 'h': sh },
-                'trimmed': False,
+                'sourceSize': { 'w': ow, 'h': oh },
+                'spriteSourceSize': { 'x': margin['x'], 'y': margin['y'], 'w': sw, 'h': sh },
+                'trimmed': sprite['trimmed'],
             }))
 
             # Save a standalone AtlasTexture for Godot
@@ -523,8 +564,12 @@ def main() -> None:
 
 [resource]
 atlas = ExtResource(1)
-region = Rect2(%i, %i, %i, %i)''' % (
-                        resource_path, frame['x'], frame['y'], frame['w'], frame['h']))
+region = Rect2(%i, %i, %i, %i)
+margin = Rect2(%i, %i, %i, %i)''' % (
+                        resource_path,
+                        frame['x'], frame['y'], frame['w'], frame['h'],
+                        margin['x'], margin['y'], margin['w'], margin['h']
+                    ))
 
         atlas_image.save(png_path)
 
@@ -569,14 +614,17 @@ region = Rect2(%i, %i, %i, %i)''' % (
 
                 for sprite in animation['sprites']:
                     frame = sprite['frame']
+                    margin = sprite['margin']
 
                     resource_id = resource_paths.index(sprite['resource_path']) + 1
 
                     sprite_frames_string += '''[sub_resource type="AtlasTexture" id=%i]
 atlas = ExtResource(%i)
 region = Rect2(%i, %i, %i, %i)
+margin = Rect2(%i, %i, %i, %i)
 
-''' % (sub_id, resource_id, frame['x'], frame['y'], frame['w'], frame['h'])
+''' % (sub_id, resource_id, frame['x'], frame['y'], frame['w'], frame['h'],
+                        margin['x'], margin['y'], margin['w'], margin['h'])
 
                     frame_strings.append('{"duration": 1.0, "texture": SubResource(%i)}' % sub_id)
 

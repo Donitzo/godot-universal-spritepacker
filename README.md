@@ -8,9 +8,7 @@
 * [AtlasTextures](https://docs.godotengine.org/en/stable/classes/class_atlastexture.html) for single sprites  
 * [SpriteFrames](https://docs.godotengine.org/en/stable/classes/class_spriteframes.html) for animations
 
-It intelligently splits and packs images or vector layers into one or more texture atlases, preserving your folder structure and optionally generating [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json` files or native Godot resources. Duplicate sprites are automatically merged to save space, unless disabled.
-
-> **Note:** Frame trimming (transparent border removal and pivot adjustment) and sprite rotation are **not** currently supported. If you rely on these optimizations, please open an issue and I'll go about adding them.
+It intelligently splits, trims and packs images or vector layers into one or more texture atlases, preserving your folder structure and optionally generating [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json` files or native Godot resources. Duplicate sprites are automatically merged to save space, unless disabled.
 
 ### Why?
 
@@ -34,8 +32,10 @@ The tool follows these steps:
    - If the file is an SVG, each **layer** is exported as a separate sprite using [Inkscape](https://inkscape.org/).
 4. Optionally checks for the existence of a `.csv` file with multiple animation definitions for a single image.
 5. Optionally saves individual sprite images to the `image_directory`.
-6. Packs sprites into one or more optimized spritesheets (texture atlases).
-7. Generates metadata files:
+6. Optionally trims transparent spaces from the sprites.
+7. Optionally merges duplicate sprites.
+8. Packs sprites into one or more optimized spritesheets (texture atlases).
+9. Generates metadata files:
    - (a) [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json`
    - (b) Godot 4 AtlasTexture `.tres` files
    - (c) Godot 4 SpriteFrames `.tres` files (for animations)
@@ -132,13 +132,14 @@ godot_universal_spritepacker --source_directory <source_dir> --spritesheet_path 
 ### Optional Arguments
 | Argument                     | Description                                                                      |
 |:-----------------------------|:---------------------------------------------------------------------------------|
-| `--save_json`                | If set, saves metadata `.json` files with sprite frames.                           |
+| `--save_json`                | If set, saves metadata `.json` files with sprite frames.                         |
 | `--image_directory`          | Directory to save individual sprite images before packing.                       |
 | `--godot_sprites_directory`  | Directory to output Godot `.tres` resource files.                                |
 | `--godot_resource_directory` | Internal Godot resource directory for spritesheets (default: `res://textures/`). |
 | `--inkscape_path`            | Custom path to the Inkscape executable for SVG processing.                       |
 | `--max_spritesheet_size`     | Maximum width/height for each spritesheet (default: `4096`).                     |
-| `--sprite_padding`           | Transparent pixels around each sprite. Default is `1` = 2 pixel total gap.      |
+| `--sprite_padding`           | Transparent pixels around each sprite. Default is `1` = 2 pixel total gap.       |
+| `--disable_trimming`         | If set, disables sprite transparency trimming.                                   |
 | `--disable_duplicate_removal`| If set, disables automatic merging of visually identical sprites.                |
 
 ---
