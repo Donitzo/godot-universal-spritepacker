@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "godot-universal-spritepacker"
-version = "1.0.2"
+version = "1.0.3"
 description = "Simple sprite packer for Godot and other engines. Split, pack, and convert images/SVGs to spritesheets and Godot resources."
 authors = [
     { name = "Donitz" }
