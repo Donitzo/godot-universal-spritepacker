@@ -65,6 +65,8 @@ boss_turret__WxH[pN][fpsN][loop]
 
 If the source file is located inside a subfolder, the relative path is included in the sprite's name (e.g., `enemies/boss__64x64.png`).
 
+> **Note:** SVG files are always exported as individual sprites based on layer and the pixel resolution defined in the file.
+
 ---
 
 ## Animation metadata (CSV)
