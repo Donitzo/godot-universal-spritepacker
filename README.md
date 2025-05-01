@@ -71,7 +71,7 @@ If the source file is located inside a subfolder, the relative path is included 
 
 ## Animation metadata (CSV)
 
-You can define multiple animations using a `.csv` file with the same base name as the image. The animations are embedded in a single SpriteFrames resource.
+You can define multiple animations using a `.csv` file with the same base name as the image. The animations are embedded in a single SpriteFrames resource (while the remaining sprites are discarded).
 
 ### Example: `hero.csv`
 ```
