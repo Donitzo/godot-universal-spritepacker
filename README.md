@@ -116,11 +116,9 @@ Alternatively, you can simply download the script and run it directly:
 python src/godot_universal_spritepacker.py
 ```
 
----
-
 ## Demo
 
-There is a set of tiles in the `sample` directory. Try converting them using one of the two `.bat` files to get an idea how the tool works. One of the files generates multiple spritesheets.
+There is a set of sprites in the `sample` directory. Try converting them using one of the two `.bat` files to get an idea how the tool works. One of the files generates multiple spritesheets.
 
 ## Usage
 
