@@ -51,6 +51,7 @@ boss_turret__WxH[pN][fpsN][loop]
 ```
 
 ### Examples:
+
 - `background.png` - Treats the entire image as one sprite.
 - `hero__32x32.png` - Splits the image into multiple 32x32 sprites.
 - `Small Spider__64x64p2fps12loop.png` - 64×64 sprite with 2px padding, 12 FPS animation, looping
@@ -116,6 +117,10 @@ python src/godot_universal_spritepacker.py
 ```
 
 ---
+
+## Demo
+
+There is a set of tiles in the `sample` directory. Try converting them using one of the two `.bat` files to get an idea how the tool works. One of the files generates multiple spritesheets.
 
 ## Usage
 
