@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PixiJS Demo</title>
+    <style>
+        body {
+            margin: 0;
+            background: #505050;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://pixijs.download/release/pixi.js"></script>
+    <script type="module">
+        // Create the PixiJS application using the full window size
+        const application = new PIXI.Application();
+        await application.init({ width: window.innerWidth, height: window.innerHeight });
+        document.body.appendChild(application.canvas);
+
+        // Layout
+        const padding = 4;
+        const spacing = 32;
+        const scale = 2;
+        const columns = Math.floor((window.innerWidth - padding) / (spacing + padding));
+
+        // Load the spritesheet (JSON + image)
+        const spriteSheet = await PIXI.Assets.load('./godot/textures/spritesheet.json');
+
+        // Create animated sprites
+        let animationIndex = 0;
+        for (const name in spriteSheet.animations) {
+            const textureNames = spriteSheet.animations[name];
+            const sprite = new PIXI.AnimatedSprite(textureNames);
+            const meta = spriteSheet.data.meta.animation_info[name];
+            sprite.animationSpeed = meta.framerate / 60;
+            sprite.loop = meta.loop;
+            sprite.play();
+            sprite.x = padding;
+            sprite.y = padding + animationIndex++ * (spacing + padding);
+            const scaleFactor = Math.min(scale, spacing / sprite.width);
+            sprite.width *= scaleFactor;
+            sprite.height *= scaleFactor;
+            application.stage.addChild(sprite);
+            const label = new PIXI.Text(name, { fill: 'white', fontSize: 12 });
+            label.x = sprite.x + sprite.width + 4;
+            label.y = sprite.y;
+            application.stage.addChild(label);
+        }
+
+        // Create individual frames as static sprites
+        Object.keys(spriteSheet.textures).forEach((name, index) => {
+            const texture = spriteSheet.textures[name];
+            const sprite = new PIXI.Sprite(texture);
+            const columnIndex = index % columns;
+            const rowIndex = Math.floor(index / columns);
+            sprite.x = padding + columnIndex * (spacing + padding);
+            sprite.y = (animationIndex + rowIndex) * (spacing + padding) + padding;
+            const scaleFactor = Math.min(scale, spacing / sprite.width);
+            sprite.width *= scaleFactor;
+            sprite.height *= scaleFactor;
+            application.stage.addChild(sprite);
+        });
+    </script>
+</body>
+</html>
