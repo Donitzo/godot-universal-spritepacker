@@ -164,7 +164,7 @@ godot_universal_spritepacker --source_directory <source_dir> --spritesheet_path 
 ### Optional Arguments
 | Argument                     | Description                                                                      |
 |:-----------------------------|:---------------------------------------------------------------------------------|
-| `--save_json`                | If set, saves metadata `.json` files with sprite frames.                         |
+| `--save_json`                | If set, saves `PixiJS spritesheet .json` files with sprite frames.               |
 | `--image_directory`          | Directory to save individual sprite images before packing.                       |
 | `--godot_sprites_directory`  | Directory to output Godot `.tres` resource files.                                |
 | `--godot_resource_directory` | Internal Godot resource directory for spritesheets (default: `res://textures/`). |
