@@ -1,12 +1,12 @@
 {
     "animations": {
-        "animation 1": [
+        "thing_a/multi_animation_sprite:animation 1": [
             "thing_a/multi_animation_sprite__0x0",
             "thing_a/multi_animation_sprite__0x1",
             "thing_a/multi_animation_sprite__0x2",
             "thing_a/multi_animation_sprite__0x3"
         ],
-        "animation 2": [
+        "thing_a/multi_animation_sprite:animation 2": [
             "thing_a/multi_animation_sprite__1x0",
             "thing_a/multi_animation_sprite__1x1",
             "thing_a/multi_animation_sprite__1x2",
@@ -2091,11 +2091,11 @@
     },
     "meta": {
         "animation_info": {
-            "animation 1": {
+            "thing_a/multi_animation_sprite:animation 1": {
                 "framerate": 24,
                 "loop": true
             },
-            "animation 2": {
+            "thing_a/multi_animation_sprite:animation 2": {
                 "framerate": 12,
                 "loop": false
             },
