@@ -11,9 +11,6 @@
 * [Installation](#installation)
 * [Demo](#demo)
 * [Usage](#usage)
-
-  * [Required Arguments](#required-arguments)
-  * [Optional Arguments](#optional-arguments)
 * [Issues](#issues)
 
 ---
