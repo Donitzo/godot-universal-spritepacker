@@ -1,6 +1,6 @@
 ![Logo](https://raw.githubusercontent.com/Donitzo/godot-universal-spritepacker/main/logo.png)
 
-![Example](hhttps://raw.githubusercontent.com/Donitzo/godot-universal-spritepacker/main/example.png)
+![Example](https://raw.githubusercontent.com/Donitzo/godot-universal-spritepacker/main/example.png)
 
 ## Description
 
@@ -122,7 +122,7 @@ python src/godot_universal_spritepacker/godot_universal_spritepacker.py
 
 There is a set of sprites in the `sample` directory. Try converting them using one of the two `.bat` files to get an idea how the tool works. One of the files generates multiple spritesheets.
 
-Inside the pre-made `./sample/output` directory, there is a simple `PixiJS` demo page for rendering the contents of the pre-compiled spritesheet.
+Inside the pre-made `./sample/output` directory, there is a simple `PixiJS` demo page for rendering the contents of the pre-compiled spritesheet. To test the PixiJS demo locally, serve it using a simple HTTP server.
 
 ![PixiJS Demo](https://raw.githubusercontent.com/Donitzo/godot-universal-spritepacker/main/pixijs_demo.png)
 
