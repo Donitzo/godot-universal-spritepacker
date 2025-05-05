@@ -91,7 +91,7 @@ Sprites are named using the format `subfolder_a/subfolder_b/original_name__RxC`,
 
 You can define multiple animations using a `.csv` file with the same base name as the image. When present, the CSV defines all frames for the corresponding `SpriteFrames` resource, and any unused sprites from the original image are discarded.
 
-Animation data is also saved in the `.json` spritesheet file as both `animations` (recognised by `PixiJS`) and in the `meta` field. The animation name is `image_name:animation_name`.
+Animation data is also saved in the `.json` spritesheet file as both `animations` (recognised by `PixiJS`) and in the `meta` field. The animation name is `image_name:animation_name`. When multiple spritesheets are exported, all animation data is stored within each individual spritesheet.
 
 ### Example: `hero.csv`
 ```
