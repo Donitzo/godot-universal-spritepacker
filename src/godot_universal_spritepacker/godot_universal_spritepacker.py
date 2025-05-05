@@ -1,4 +1,4 @@
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot_universal_spritepacker'
