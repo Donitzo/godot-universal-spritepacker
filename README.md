@@ -76,6 +76,8 @@ Sprites are named using the format `subfolder_a/subfolder_b/original_name__RxC`,
 
 You can define multiple animations using a `.csv` file with the same base name as the image. When present, the CSV defines all frames for the corresponding `SpriteFrames` resource, and any unused sprites from the original image are discarded.
 
+Animation data is also saved in the `.json` spritesheet file in the `meta` field.
+
 ### Example: `hero.csv`
 ```
 name; start_x; start_y; count_x; count_y; fps; loop
@@ -113,7 +115,7 @@ pip install git+https://github.com/Donitzo/godot-universal-spritepacker.git
 Alternatively, you can simply download the script and run it directly:
 
 ```bash
-python src/godot_universal_spritepacker.py
+python src/godot_universal_spritepacker/godot_universal_spritepacker.py
 ```
 
 ## Demo

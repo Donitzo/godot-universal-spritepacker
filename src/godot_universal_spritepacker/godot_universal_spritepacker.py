@@ -1,4 +1,4 @@
-__version__ = '1.0.3'
+__version__ = '1.0.5'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot_universal_spritepacker'
@@ -71,7 +71,13 @@ class FrameEntryDict(TypedDict, total=True):
     spriteSourceSize: RectDict
     trimmed: bool
 
+class AtlasAnimationDict(TypedDict, total=True):
+    frame_names: List[str]
+    loop: bool
+    framerate: int
+
 class MetaDict(TypedDict, total=True):
+    animations: Dict[str, AtlasAnimationDict]
     app: str
     format: str
     image: str
@@ -496,11 +502,24 @@ def main() -> None:
         path_prefix: str = '%s%s' % (args.spritesheet_path, '' if bin_count == 1 else '_%i' % b_i)
         png_path: str = '%s.png' % path_prefix
 
+        # Create an animations dictionary
+        animations_dict: Dict[str, AtlasAnimationDict] = {}
+
+        for sprite_frame in sprite_frames:
+            for animation in sprite_frame['animations']:
+                frame_names: List[str] = [sprite['name'] for sprite in animation['sprites']]
+                animations_dict[animation['name']] = {
+                    'frame_names': frame_names,
+                    'loop': animation['loop'],
+                    'framerate': animation['framerate']
+                }
+
         # Create blank atlas image
         atlas_image: Image.Image = Image.new('RGBA', (bin_size, bin_size), (0, 0, 0, 0))
         atlas_data: AtlasDict = {
             'frames': [],
             'meta': {
+                'animations': animations_dict,
                 'app': 'Godot Universal SpritePacker',
                 'format': 'RGBA8888',
                 'image': os.path.basename('%s.png' % path_prefix),
@@ -581,7 +600,7 @@ margin = Rect2(%i, %i, %i, %i)''' % (
         atlas_image.save(png_path)
 
         if args.save_json:
-            with open('%s.json' % path_prefix, 'w') as f:
+            with open('%s.json' % path_prefix, 'w', encoding='utf-8') as f:
                 json.dump(atlas_data, f, indent=4, sort_keys=True)
 
         print('Spritesheet %i created at "%s.png"' % (b_i, path_prefix))
@@ -602,7 +621,6 @@ margin = Rect2(%i, %i, %i, %i)''' % (
             sprite_frames_string: str = '[gd_resource type="SpriteFrames" format=3]\n\n'
 
             resource_paths: List[str] = []
-            animation: AnimationDict
             for animation in sprite_frame['animations']:
                 for sprite in animation['sprites']:
                     if not sprite['resource_path'] in resource_paths:
