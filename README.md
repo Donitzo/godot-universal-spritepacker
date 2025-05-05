@@ -21,7 +21,7 @@
 * [AtlasTextures](https://docs.godotengine.org/en/stable/classes/class_atlastexture.html) for single sprites  
 * [SpriteFrames](https://docs.godotengine.org/en/stable/classes/class_spriteframes.html) for animations
 
-It intelligently splits, trims and packs images or vector layers into one or more texture atlases, preserving your folder structure and optionally generating [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json` files or native Godot resources. Duplicate sprites are automatically merged to save space, unless disabled.
+It intelligently splits, trims and packs images or vector layers into one or more texture atlases, preserving your folder structure and optionally generating [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json` files or native Godot resources. Duplicate sprites are automatically merged to save space, unless disabled. [View PixiJS example spritesheet](sample/output/spritesheet.json)
 
 ![Example](https://raw.githubusercontent.com/Donitzo/godot-universal-spritepacker/main/example.png)
 
