@@ -32,4 +32,4 @@ where = ["src"]
 include = ["godot_universal_spritepacker"]
 
 [project.scripts]
-godot-universal-spritepacker = "godot_universal_spritepacker.godot_universal_spritepacker:main"
+godot_universal_spritepacker = "godot_universal_spritepacker.godot_universal_spritepacker:main"
