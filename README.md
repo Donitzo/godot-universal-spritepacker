@@ -121,7 +121,13 @@ Jump;       0;       1;       4;       1;  12; false
 
 ## Installation
 
-You can install the tool directly from GitHub. This installs a command-line tool called `godot_universal_spritepacker`:
+You can install the tool from PyPI or directly from GitHub. This installs a command-line tool called `godot_universal_spritepacker`:
+
+```bash
+pip install godot-universal-spritepacker
+```
+
+or
 
 ```bash
 pip install git+https://github.com/Donitzo/godot-universal-spritepacker.git
