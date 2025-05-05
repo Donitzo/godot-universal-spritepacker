@@ -76,7 +76,7 @@ Sprites are named using the format `subfolder_a/subfolder_b/original_name__RxC`,
 
 You can define multiple animations using a `.csv` file with the same base name as the image. When present, the CSV defines all frames for the corresponding `SpriteFrames` resource, and any unused sprites from the original image are discarded.
 
-Animation data is also saved in the `.json` spritesheet file as both `animations` (recognised by `PixiJS`) and in the `meta` field.
+Animation data is also saved in the `.json` spritesheet file as both `animations` (recognised by `PixiJS`) and in the `meta` field. The animation name is `image_name:animation_name`.
 
 ### Example: `hero.csv`
 ```
@@ -150,6 +150,7 @@ godot_universal_spritepacker --source_directory <source_dir> --spritesheet_path 
 | `--sprite_padding`           | Transparent pixels around each sprite. Default is `1` = 2 pixel total gap.       |
 | `--disable_trimming`         | If set, disables sprite transparency trimming.                                   |
 | `--disable_duplicate_removal`| If set, disables automatic merging of visually identical sprites.                |
+| `--default_framerate`        | If set, treats all regular sprites as animations with this framerate.            |
 
 ---
 

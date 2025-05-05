@@ -1,4 +1,4 @@
-__version__ = '1.0.6'
+__version__ = '1.1.0'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot_universal_spritepacker'
@@ -122,6 +122,8 @@ def main() -> None:
         help='If set, disables transparency trimming.')
     parser.add_argument('--disable_duplicate_removal', action='store_true',
         help='If set, disables duplicate frame detection and removal.')
+    parser.add_argument('--default_framerate', type=int,
+        help='If set, treats all regular sprites as animations with this framerate.')
 
     args: argparse.Namespace = parser.parse_args()
 
@@ -235,7 +237,7 @@ def main() -> None:
 
             # Static image vs tileset detection
             match: Optional[re.Match[str]] = re.search(
-                r'^(.*?)__(\d+)x(\d+)(?:p(\d+))?(?:fps(\d+)(loop)?)?$', name)
+                r'^(.*?)__(\d+)x(\d+)(?:p(\d+))?(?:fps(\d+))?(loop)?$', name)
 
             if not match:
                 # Single image sprite
@@ -348,13 +350,13 @@ def main() -> None:
 
                     for sprite in animation_sprites:
                         sprite['animated'] = True
-            elif not groups[4] is None:
-                # Fallback default animation from filename
+            elif not groups[4] is None or not args.default_framerate is None:
+                # Default animation from filename
 
                 sprite_frame['animations'].append(cast(AnimationDict, {
-                    'framerate': int(groups[4]),
+                    'framerate': args.default_framerate if groups[4] is None else int(groups[4]),
                     'loop': groups[5] is not None,
-                    'name': 'default',
+                    'name': '%s:default' % image_name,
                     'sprites': tileset_sprites,
                 }))
 
