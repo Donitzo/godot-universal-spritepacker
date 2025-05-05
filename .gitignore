@@ -1,0 +1,10 @@
+# Bytecode and cache
+__pycache__/
+*.pyc
+
+# Packaging artifacts
+build/
+dist/
+*.egg-info/
+*.whl
+MANIFEST
