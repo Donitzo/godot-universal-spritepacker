@@ -1,4 +1,4 @@
-__version__ = '1.0.5'
+__version__ = '1.0.6'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot_universal_spritepacker'
@@ -64,7 +64,6 @@ class SpriteFrameDict(TypedDict, total=True):
     name: str
 
 class FrameEntryDict(TypedDict, total=True):
-    filename: str
     frame: RectDict
     rotated: bool
     sourceSize: SizeDict
@@ -72,12 +71,11 @@ class FrameEntryDict(TypedDict, total=True):
     trimmed: bool
 
 class AtlasAnimationDict(TypedDict, total=True):
-    frame_names: List[str]
     loop: bool
     framerate: int
 
 class MetaDict(TypedDict, total=True):
-    animations: Dict[str, AtlasAnimationDict]
+    animation_info: Dict[str, AtlasAnimationDict]
     app: str
     format: str
     image: str
@@ -86,7 +84,8 @@ class MetaDict(TypedDict, total=True):
     version: str
 
 class AtlasDict(TypedDict, total=True):
-    frames: List[FrameEntryDict]
+    animations: Dict[str, List[str]]
+    frames: Dict[str, FrameEntryDict]
     meta: MetaDict
 
 RectTuple = Tuple[int, int, int, int, SpriteDict]
@@ -502,14 +501,14 @@ def main() -> None:
         path_prefix: str = '%s%s' % (args.spritesheet_path, '' if bin_count == 1 else '_%i' % b_i)
         png_path: str = '%s.png' % path_prefix
 
-        # Create an animations dictionary
-        animations_dict: Dict[str, AtlasAnimationDict] = {}
+        # Create an animation info and animations dictionary
+        animation_info: Dict[str, AtlasAnimationDict] = {}
+        animations: Dict[str, List[str]] = {}
 
         for sprite_frame in sprite_frames:
             for animation in sprite_frame['animations']:
-                frame_names: List[str] = [sprite['name'] for sprite in animation['sprites']]
-                animations_dict[animation['name']] = {
-                    'frame_names': frame_names,
+                animations[animation['name']] = [sprite['name'] for sprite in animation['sprites']]
+                animation_info[animation['name']] = {
                     'loop': animation['loop'],
                     'framerate': animation['framerate']
                 }
@@ -517,9 +516,10 @@ def main() -> None:
         # Create blank atlas image
         atlas_image: Image.Image = Image.new('RGBA', (bin_size, bin_size), (0, 0, 0, 0))
         atlas_data: AtlasDict = {
-            'frames': [],
+            'animations': animations,
+            'frames': {},
             'meta': {
-                'animations': animations_dict,
+                'animation_info': animation_info,
                 'app': 'Godot Universal SpritePacker',
                 'format': 'RGBA8888',
                 'image': os.path.basename('%s.png' % path_prefix),
@@ -561,14 +561,13 @@ def main() -> None:
             ow: int = sw + margin['w']
             oh: int = sh + margin['h']
 
-            atlas_data['frames'].append(cast(FrameEntryDict, {
-                'filename': sprite['name'],
+            atlas_data['frames'][sprite['name']] = {
                 'frame': sprite['frame'],
                 'rotated': False,
                 'sourceSize': { 'w': ow, 'h': oh },
                 'spriteSourceSize': { 'x': margin['x'], 'y': margin['y'], 'w': sw, 'h': sh },
                 'trimmed': sprite['trimmed'],
-            }))
+            }
 
             # Save a standalone AtlasTexture for Godot
             if not args.godot_sprites_directory is None and not sprite['animated']:
