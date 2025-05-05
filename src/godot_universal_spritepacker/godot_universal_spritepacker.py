@@ -342,7 +342,7 @@ def main() -> None:
                     sprite_frame['animations'].append(cast(AnimationDict, {
                         'framerate': int(line[5]),
                         'loop': line[6].lower().strip() != 'false',
-                        'name': line[0],
+                        'name': '%s:%s' % (image_name, line[0]),
                         'sprites': animation_sprites,
                     }))
 
