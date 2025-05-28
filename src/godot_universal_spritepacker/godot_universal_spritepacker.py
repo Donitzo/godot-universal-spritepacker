@@ -1,4 +1,4 @@
-__version__ = '1.1.2'
+__version__ = '1.1.4'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot-universal-spritepacker'
@@ -56,6 +56,7 @@ class SpriteDict(TypedDict, total=True):
 class AnimationDict(TypedDict, total=True):
     framerate: int
     loop: bool
+    short_name: str
     name: str
     sprites: List[SpriteDict]
 
@@ -343,6 +344,7 @@ def main() -> None:
                         'framerate': int(line[5]),
                         'loop': line[6].lower().strip() != 'false',
                         'name': '%s:%s' % (image_name, line[0]),
+                        'short_name': line[0],
                         'sprites': animation_sprites,
                     }))
 
@@ -357,6 +359,7 @@ def main() -> None:
                     'framerate': args.default_framerate if groups[4] is None else int(groups[4]),
                     'loop': groups[5] is not None,
                     'name': '%s:default' % image_name,
+                    'short_name': 'default',
                     'sprites': tileset_sprites,
                 }))
 
@@ -664,7 +667,7 @@ margin = Rect2(%i, %i, %i, %i)
     "name": &"%s",
     "speed": %.1f
 }''' % (',\n        '.join(frame_strings),
-                    str(animation['loop']).lower(), animation['name'], animation['framerate']))
+                    str(animation['loop']).lower(), animation['short_name'], animation['framerate']))
 
             sprite_frames_string += '''[resource]
 animations = [%s]
