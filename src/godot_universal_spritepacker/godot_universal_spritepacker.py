@@ -1,4 +1,4 @@
-__version__ = '1.1.4'
+__version__ = '1.1.5'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot-universal-spritepacker'
@@ -335,7 +335,10 @@ def main() -> None:
 
                     for y_i in range(y0, y0 + cy):
                         for x_i in range(x0, x0 + cx):
-                            sprite = tileset_grid[x_i][y_i]
+                            try:
+                                sprite = tileset_grid[x_i][y_i]
+                            except:
+                                sys.exit('Index %ix%i out of range in "%s"' % (x_i, y_i, csv_path))
                             sprite['remove'] = False
 
                             animation_sprites.append(sprite)
