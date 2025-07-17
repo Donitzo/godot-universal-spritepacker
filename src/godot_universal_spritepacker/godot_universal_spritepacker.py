@@ -1,4 +1,4 @@
-__version__ = '1.1.5'
+__version__ = '1.1.6'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot-universal-spritepacker'
@@ -123,6 +123,8 @@ def main() -> None:
         help='If set, disables transparency trimming.')
     parser.add_argument('--disable_duplicate_removal', action='store_true',
         help='If set, disables duplicate frame detection and removal.')
+    parser.add_argument('--min_trim_margin', type=int, default=0,
+        help='The minimum margin to keep after trimming sprites.')
     parser.add_argument('--default_framerate', type=int,
         help='If set, treats all regular sprites as animations with this framerate.')
 
@@ -420,12 +422,16 @@ def main() -> None:
 
             if bbox != (0, 0, w, h):
                 sprite['trimmed'] = True
-                sprite['image'] = sprite['image'].crop(bbox)
+                left = max(0, bbox[0] - args.min_trim_margin)
+                top = max(0, bbox[1] - args.min_trim_margin)
+                right = min(w, bbox[2] + args.min_trim_margin)
+                bottom = min(h, bbox[3] + args.min_trim_margin)
+                sprite['image'] = sprite['image'].crop((left, top, right, bottom))
                 sprite['margin'] = {
-                    'x': bbox[0],
-                    'y': bbox[1],
-                    'w': w - (bbox[2] - bbox[0]),
-                    'h': h - (bbox[3] - bbox[1]),
+                    'x': left,
+                    'y': top,
+                    'w': w - (right - left),
+                    'h': h - (bottom - top),
                 }
                 trimmed_count += 1
                 trimmed_pixels += (w * h) - (sprite['image'].size[0] * sprite['image'].size[1])
