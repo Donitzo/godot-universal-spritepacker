@@ -173,6 +173,7 @@ godot_universal_spritepacker --source_directory <source_dir> --spritesheet_path 
 | `--sprite_padding`           | Transparent pixels around each sprite. Default is `1` = 2 pixel total gap.       |
 | `--disable_trimming`         | If set, disables sprite transparency trimming.                                   |
 | `--disable_duplicate_removal`| If set, disables automatic merging of visually identical sprites.                |
+| `--min_trim_margin`          | The minimum margin to keep after trimming sprites (good for edge effects).       |
 | `--default_framerate`        | If set, treats all regular sprites as animations with this framerate.            |
 
 ---
