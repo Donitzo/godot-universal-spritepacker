@@ -1,4 +1,4 @@
-__version__ = '1.1.6'
+__version__ = '1.1.7'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot-universal-spritepacker'
@@ -44,7 +44,6 @@ class RectDict(TypedDict, total=True):
 
 class SpriteDict(TypedDict, total=True):
     animated: bool
-    duplicate: Optional['SpriteDict']
     frame: RectDict
     image: Image.Image
     name: str
@@ -121,8 +120,6 @@ def main() -> None:
         help='Number of transparent pixels to pad around each sprite. Default is 1 = 2 px gap.')
     parser.add_argument('--disable_trimming', action='store_true',
         help='If set, disables transparency trimming.')
-    parser.add_argument('--disable_duplicate_removal', action='store_true',
-        help='If set, disables duplicate frame detection and removal.')
     parser.add_argument('--min_trim_margin', type=int, default=0,
         help='The minimum margin to keep after trimming sprites.')
     parser.add_argument('--default_framerate', type=int,
@@ -200,7 +197,6 @@ def main() -> None:
                         if os.path.exists(image_path):
                             sprites.append(cast(SpriteDict, {
                                 'animated': False,
-                                'duplicate': None,
                                 'frame': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
                                 'image': Image.open(image_path).convert('RGBA'),
                                 'margin': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
@@ -249,7 +245,6 @@ def main() -> None:
 
                 sprites.append(cast(SpriteDict, {
                     'animated': False,
-                    'duplicate': None,
                     'frame': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
                     'image': Image.open(source_path).convert('RGBA'),
                     'margin': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
@@ -293,7 +288,6 @@ def main() -> None:
 
                     sprite: SpriteDict = {
                         'animated': False,
-                        'duplicate': None,
                         'frame': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
                         'image': im.crop((x, y, x + tile_width, y + tile_height)),
                         'margin': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
@@ -439,32 +433,6 @@ def main() -> None:
         print('Trimmed %i sprites for %i pixels' % (trimmed_count, trimmed_pixels))
 
     # ----------------------------------------------------------------------------------------------
-    # Duplicate sprite marking
-    # ----------------------------------------------------------------------------------------------
-
-    if not args.disable_duplicate_removal:
-        print('\nChecking for duplicate sprites...')
-
-        duplicates: int = 0
-
-        for i, sprite in enumerate(sprites):
-            if sprite['duplicate'] is not None:
-                continue
-
-            data: List[Tuple[int, int, int, int]] = list(sprite['image'].getdata())
-
-            for other in sprites[i + 1:]:
-                if other['duplicate'] is not None:
-                    continue
-
-                other_data = list(other['image'].getdata())
-                if len(data) == len(other_data) and data == other_data:
-                    other['duplicate'] = sprite
-                    duplicates += 1
-
-        print('Found %i duplicate sprites' % duplicates)
-
-    # ----------------------------------------------------------------------------------------------
     # Pack all sprites into one or more atlases via rectpack
     # ----------------------------------------------------------------------------------------------
 
@@ -480,13 +448,7 @@ def main() -> None:
         for _ in range(bin_count):
             packer.add_bin(bin_size, bin_size)
 
-        non_duplicate_count: int = 0
-
         for sprite in sprites:
-            if not sprite['duplicate'] is None:
-                continue
-            non_duplicate_count += 1
-
             w, h = sprite['image'].size
 
             if w + padding * 2 > max_side or h + padding * 2 > max_side:
@@ -496,7 +458,7 @@ def main() -> None:
 
         packer.pack()
 
-        if len(packer) > 0 and len(packer.rect_list()) == non_duplicate_count:
+        if len(packer) > 0 and len(packer.rect_list()) == len(sprites):
             break
 
         if bin_size * 2 <= max_side:
@@ -504,8 +466,8 @@ def main() -> None:
         else:
             bin_count += 1
 
-    print('Packed %i non-duplicate sprites (out of %i total) into %i spritesheets of size %ix%i\n'
-        % (non_duplicate_count, len(sprites), bin_count, bin_size, bin_size))
+    print('Packed %i sprites into %i spritesheets of size %ix%i\n'
+        % (len(sprites), bin_count, bin_size, bin_size))
 
     # ----------------------------------------------------------------------------------------------
     # Write out each packed atlas: PNG + JSON + Godot .tres files
@@ -561,12 +523,8 @@ def main() -> None:
 
         # Build JSON frame entries
         for sprite in sprites:
-            if not sprite in bin_sprites and not sprite['duplicate'] in bin_sprites:
+            if not sprite in bin_sprites:
                 continue
-
-            if not sprite['duplicate'] is None:
-                sprite['resource_path'] = sprite['duplicate']['resource_path']
-                sprite['frame'] = sprite['duplicate']['frame']
 
             sw, sh = sprite['image'].size
 
