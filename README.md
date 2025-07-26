@@ -21,7 +21,7 @@
 * [AtlasTextures](https://docs.godotengine.org/en/stable/classes/class_atlastexture.html) for single sprites  
 * [SpriteFrames](https://docs.godotengine.org/en/stable/classes/class_spriteframes.html) for animations
 
-It intelligently splits, trims and packs images or vector layers into one or more texture atlases, preserving your folder structure and optionally generating [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json` files or native Godot resources. Duplicate sprites are automatically merged to save space, unless disabled. [View PixiJS example spritesheet](https://github.com/Donitzo/godot-universal-spritepacker/blob/main/sample/output/spritesheet.json)
+It intelligently splits, trims and packs images or vector layers into one or more texture atlases, preserving your folder structure and optionally generating [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json` files or native Godot resources. [View PixiJS example spritesheet](https://github.com/Donitzo/godot-universal-spritepacker/blob/main/sample/output/spritesheet.json)
 
 ![Example](https://raw.githubusercontent.com/Donitzo/godot-universal-spritepacker/main/example.png)
 
@@ -48,9 +48,8 @@ The tool follows these steps:
 4. Optionally checks for the existence of a `.csv` file with multiple animation definitions for a single image.
 5. Optionally saves individual sprite images to the `image_directory`.
 6. Optionally trims transparent spaces from the sprites.
-7. Optionally merges duplicate sprites.
-8. Packs sprites into one or more optimized spritesheets (texture atlases).
-9. Generates metadata files:
+7. Packs sprites into one or more optimized spritesheets (texture atlases).
+8. Generates metadata files:
    - (a) [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json`
    - (b) Godot 4 AtlasTexture `.tres` files
    - (c) Godot 4 SpriteFrames `.tres` files (for animations)
@@ -172,7 +171,6 @@ godot_universal_spritepacker --source_directory <source_dir> --spritesheet_path 
 | `--max_spritesheet_size`     | Maximum width/height for each spritesheet (default: `4096`).                     |
 | `--sprite_padding`           | Transparent pixels around each sprite. Default is `1` = 2 pixel total gap.       |
 | `--disable_trimming`         | If set, disables sprite transparency trimming.                                   |
-| `--disable_duplicate_removal`| If set, disables automatic merging of visually identical sprites.                |
 | `--min_trim_margin`          | The minimum margin to keep after trimming sprites (good for edge effects).       |
 | `--default_framerate`        | If set, treats all regular sprites as animations with this framerate.            |
 
