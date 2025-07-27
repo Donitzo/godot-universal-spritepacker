@@ -1,4 +1,4 @@
-__version__ = '1.1.7'
+__version__ = '1.1.8'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot-universal-spritepacker'
@@ -10,6 +10,7 @@ __repository__ = 'https://github.com/Donitzo/godot-universal-spritepacker'
 import argparse
 import csv
 import json
+import math
 import os
 import re
 import subprocess
@@ -20,6 +21,7 @@ import xml.etree.ElementTree as ET
 
 from PIL import Image
 from rectpack import newPacker, PackerBFF
+from rectpack.guillotine import GuillotineBssfSas
 from typing import cast, Dict, List, Optional, Tuple, TypedDict
 
 # Minimum and maximum supported Python versions
@@ -438,13 +440,17 @@ def main() -> None:
 
     print('\nPacking %i sprites...' % len(sprites))
 
-    bin_size: int = 32
-    bin_count: int = 1
-    max_side: int = args.max_spritesheet_size
     padding: int = args.sprite_padding
+    max_side: int = args.max_spritesheet_size
+    total_area: int = 0
+    for sprite in sprites:
+        w, h = sprite['image'].size
+        total_area += (w + padding * 2) * (h + padding * 2)
+    bin_size: int = min(max_side, 2 ** math.ceil(math.log2(math.ceil(math.sqrt(total_area)))))
+    bin_count: int = 1
 
     while True:
-        packer: PackerBFF = newPacker(rotation=False)
+        packer: PackerBFF = newPacker(pack_algo=GuillotineBssfSas, rotation=False)
         for _ in range(bin_count):
             packer.add_bin(bin_size, bin_size)
 
