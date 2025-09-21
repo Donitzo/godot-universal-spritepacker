@@ -161,18 +161,19 @@ godot_universal_spritepacker --source_directory <source_dir> --spritesheet_path 
 | `--spritesheet_path` | Output path (without extension) for the spritesheet(s). |
 
 ### Optional Arguments
-| Argument                     | Description                                                                      |
-|:-----------------------------|:---------------------------------------------------------------------------------|
-| `--save_json`                | If set, saves `PixiJS spritesheet .json` files with sprite frames.               |
-| `--image_directory`          | Directory to save individual sprite images before packing.                       |
-| `--godot_sprites_directory`  | Directory to output Godot `.tres` resource files.                                |
-| `--godot_resource_directory` | Internal Godot resource directory for spritesheets (default: `res://textures/`). |
-| `--inkscape_path`            | Custom path to the Inkscape executable for SVG processing.                       |
-| `--max_spritesheet_size`     | Maximum width/height for each spritesheet (default: `4096`).                     |
-| `--sprite_padding`           | Transparent pixels around each sprite. Default is `1` = 2 pixel total gap.       |
-| `--disable_trimming`         | If set, disables sprite transparency trimming.                                   |
-| `--min_trim_margin`          | The minimum margin to keep after trimming sprites (good for edge effects).       |
-| `--default_framerate`        | If set, treats all regular sprites as animations with this framerate.            |
+| Argument                     | Description                                                                                     |
+|:-----------------------------|:------------------------------------------------------------------------------------------------|
+| `--save_json`                | If set, saves `PixiJS spritesheet .json` files with sprite frames.                              |
+| `--image_directory`          | Directory to save individual sprite images before packing.                                      |
+| `--godot_sprites_directory`  | Directory to output Godot `.tres` resource files.                                               |
+| `--godot_resource_directory` | Internal Godot resource directory for spritesheets (default: `res://textures/`).                |
+| `--inkscape_path`            | Custom path to the Inkscape executable for SVG processing.                                      |
+| `--convert_svg_to_png`       | Convert `.svg` files into `.png`  in the same directory before packing. Disables layer exports. |
+| `--max_spritesheet_size`     | Maximum width/height for each spritesheet (default: `4096`).                                    |
+| `--sprite_padding`           | Transparent pixels around each sprite. Default is `1` = 2 pixel total gap.                      |
+| `--disable_trimming`         | If set, disables sprite transparency trimming.                                                  |
+| `--min_trim_margin`          | The minimum margin to keep after trimming sprites (good for edge effects).                      |
+| `--default_framerate`        | If set, treats all regular sprites as animations with this framerate.                           |
 
 ---
 
