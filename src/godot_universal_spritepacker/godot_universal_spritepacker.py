@@ -1,4 +1,4 @@
-__version__ = '1.1.8'
+__version__ = '1.1.9'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot-universal-spritepacker'
@@ -116,6 +116,8 @@ def main() -> None:
         help='Godot resource directory containing spritesheet images. Default is "res://textures/"')
     parser.add_argument('--inkscape_path', default='C:/Program Files/Inkscape/bin/inkscape',
         help='Path to the Inkscape executable. Used for extracting layers from SVG files.')
+    parser.add_argument('--convert_svg_to_png', action='store_true',
+        help='If set, automatically converts .svg files into .png files in the same directory (overwrites).')
     parser.add_argument('--max_spritesheet_size', type=int, default=4096,
         help='Maximum width or height (in pixels) for the generated spritesheet. Default is 4096.')
     parser.add_argument('--sprite_padding', type=int, default=1,
@@ -159,73 +161,94 @@ def main() -> None:
             if name.startswith('./'):
                 name = name[2:]
 
-            # SVG: split into layers via Inkscape
+            # SVG: split into layers via Inkscape or export as grid image
             if extension.lower() == '.svg':
                 print('Splitting vector file "%s"' % source_path)
 
-                tree: ET.ElementTree = ET.parse(source_path)
-                layers: List[ET.Element] = tree.findall("./{http://www.w3.org/2000/svg}" +
-                    "g[@{http://www.inkscape.org/namespaces/inkscape}groupmode='layer']")
+                if args.convert_svg_to_png:
+                    image_path: str = os.path.splitext(source_path)[0] + '.png'
 
-                for layer in layers:
-                    layer_id: str = layer.attrib['id']
-                    label: str = layer.attrib['{http://www.inkscape.org/namespaces/inkscape}label']
-
-                    print('-> Exporting layer "%s"' % label)
-
-                    image_path: str = os.path.join(tempfile.gettempdir(),
-                        'gus_%s.png' % os.urandom(12).hex())
-
-                    # call Inkscape to export one layer as PNG
                     try:
                         result: subprocess.CompletedProcess = subprocess.run([
                             args.inkscape_path,
                             source_path,
-                            '--export-area-drawing',
+                            '--export-area-page',
                             '--export-type=png',
-                            '--export-id-only',
-                            '--export-id=%s' % layer_id,
                             '--export-filename=%s' % image_path,
                         ])
                     except FileNotFoundError:
                         print('Unable to find Inkscape. Skipping vector conversion.')
                         continue
 
-                    if result.returncode != 0:
-                        sys.exit('Error exporting SVG layer "%s" from "%s"' % (label, source_path))
+                    if result.returncode != 0 or not os.path.exists(image_path):
+                        sys.exit('Error exporting SVG "%s" as PNG' % source_path)
 
-                    # Wait for output file to appear
-                    for attempt in range(10):
-                        if os.path.exists(image_path):
-                            sprites.append(cast(SpriteDict, {
-                                'animated': False,
-                                'frame': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
-                                'image': Image.open(image_path).convert('RGBA'),
-                                'margin': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
-                                'name': '%s/%s' % (name, re.sub('[^a-zA-Z0-9_ -]+', '', label)),
-                                'remove': False,
-                                'resource_path': '',
-                                'trimmed': False,
-                            }))
+                    source_path = image_path
+                    extension = '.png'
+                else:
+                    tree: ET.ElementTree = ET.parse(source_path)
+                    layers: List[ET.Element] = tree.findall("./{http://www.w3.org/2000/svg}" +
+                        "g[@{http://www.inkscape.org/namespaces/inkscape}groupmode='layer']")
 
-                            break
+                    for layer in layers:
+                        layer_id: str = layer.attrib['id']
+                        label: str = layer.attrib['{http://www.inkscape.org/namespaces/inkscape}label']
 
-                        if attempt == 9:
-                            sys.exit('Error exporting SVG layer "%s" from "%s"'
-                                % (label, source_path))
-                        else:
-                            time.sleep(1)
+                        print('-> Exporting layer "%s"' % label)
 
-                    # Clean up temp file
-                    while os.path.exists(image_path):
+                        image_path: str = os.path.join(tempfile.gettempdir(),
+                            'gus_%s.png' % os.urandom(12).hex())
+
+                        # call Inkscape to export one layer as PNG
                         try:
-                            os.remove(image_path)
-                        except OSError:
-                            time.sleep(1)
+                            result: subprocess.CompletedProcess = subprocess.run([
+                                args.inkscape_path,
+                                source_path,
+                                '--export-area-drawing',
+                                '--export-type=png',
+                                '--export-id-only',
+                                '--export-id=%s' % layer_id,
+                                '--export-filename=%s' % image_path,
+                            ])
+                        except FileNotFoundError:
+                            print('Unable to find Inkscape. Skipping vector conversion.')
+                            continue
 
-                            print('Failed to delete temporary file')
+                        if result.returncode != 0:
+                            sys.exit('Error exporting SVG layer "%s" from "%s"' % (label, source_path))
 
-                continue
+                        # Wait for output file to appear
+                        for attempt in range(10):
+                            if os.path.exists(image_path):
+                                sprites.append(cast(SpriteDict, {
+                                    'animated': False,
+                                    'frame': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
+                                    'image': Image.open(image_path).convert('RGBA'),
+                                    'margin': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
+                                    'name': '%s/%s' % (name, re.sub('[^a-zA-Z0-9_ -]+', '', label)),
+                                    'remove': False,
+                                    'resource_path': '',
+                                    'trimmed': False,
+                                }))
+
+                                break
+
+                            if attempt == 9:
+                                sys.exit('Error exporting SVG layer "%s" from "%s"'
+                                    % (label, source_path))
+                            else:
+                                time.sleep(1)
+
+                        # Clean up temp file
+                        while os.path.exists(image_path):
+                            try:
+                                os.remove(image_path)
+                            except OSError:
+                                time.sleep(1)
+
+                                print('Failed to delete temporary file')
+
+                    continue
 
             # CSV files are always handled through images
             if extension.lower() == '.csv':
