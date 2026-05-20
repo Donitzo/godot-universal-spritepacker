@@ -108,6 +108,7 @@ Jump;       0;       1;       4;       1;  12; false
 | `count_y` | Number of rows in the animation.                    |
 | `fps`     | Playback speed (frames per second).                 |
 | `loop`    | Whether the animation should loop (`true`/`false`). |
+| `_post`   | For each tile, run custom "postprocessor()".        |
 
 ---
 

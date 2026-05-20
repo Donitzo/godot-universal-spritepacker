@@ -1,4 +1,4 @@
-__version__ = '1.1.9'
+__version__ = '1.2.0'
 __author__  = 'Donitz'
 __license__ = 'MIT'
 __repository__ = 'https://github.com/Donitzo/godot-universal-spritepacker'
@@ -32,6 +32,10 @@ MIN_VERSION, VERSION_LESS_THAN = (3, 9), (4, 0)
 if sys.version_info < MIN_VERSION or sys.version_info >= VERSION_LESS_THAN:
     raise UnsupportedVersion('requires Python %s,<%s' %
         ('.'.join(map(str, MIN_VERSION)), '.'.join(map(str, VERSION_LESS_THAN))))
+
+# Replace with your own custom image postprocessor
+def postprocessor(image: Image.Image) -> Image.Image:
+    return image
 
 # TypedDict definitions for strong typing
 class SizeDict(TypedDict, total=True):
@@ -261,7 +265,7 @@ def main() -> None:
 
             # Static image vs tileset detection
             match: Optional[re.Match[str]] = re.search(
-                r'^(.*?)__(\d+)x(\d+)(?:p(\d+))?(?:fps(\d+))?(loop)?$', name)
+                r'^(.*?)__(\d+)x(\d+)(?:p(\d+))?(?:fps(\d+))?(loop)?(_post)?$', name)
 
             if not match:
                 # Single image sprite
@@ -311,10 +315,14 @@ def main() -> None:
                 for x_i, x in enumerate(start_x):
                     x_s: str = str(x_i).zfill(len(str(len(start_x) - 1)))
 
+                    new_image: Image.Image = im.crop((x, y, x + tile_width, y + tile_height))
+                    if groups[6] is not None:
+                        new_image = postprocessor(new_image)
+
                     sprite: SpriteDict = {
                         'animated': False,
                         'frame': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
-                        'image': im.crop((x, y, x + tile_width, y + tile_height)),
+                        'image': new_image,
                         'margin': { 'x': 0, 'y': 0, 'w': 0, 'h': 0 },
                         'name': '%s__%sx%s' % (image_name, y_s, x_s),
                         'remove': False,
