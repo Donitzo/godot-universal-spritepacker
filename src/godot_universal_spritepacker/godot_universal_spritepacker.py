@@ -34,7 +34,7 @@ if sys.version_info < MIN_VERSION or sys.version_info >= VERSION_LESS_THAN:
         ('.'.join(map(str, MIN_VERSION)), '.'.join(map(str, VERSION_LESS_THAN))))
 
 # Replace with your own custom image postprocessor
-def postprocessor(image: Image.Image) -> Image.Image:
+def postprocessor(image: Image.Image, x: int, y: int) -> Image.Image:
     return image
 
 # TypedDict definitions for strong typing
@@ -317,7 +317,7 @@ def main() -> None:
 
                     new_image: Image.Image = im.crop((x, y, x + tile_width, y + tile_height))
                     if groups[6] is not None:
-                        new_image = postprocessor(new_image)
+                        new_image = postprocessor(new_image, x_i, y_i)
 
                     sprite: SpriteDict = {
                         'animated': False,
