@@ -17,11 +17,11 @@
 
 ## Description
 
-**Godot Universal SpritePacker** is a Python tool that converts individual images, tilesets, and SVG layers into optimized spritesheets and ready-to-use Godot `.tres` resources:
+**Godot Universal SpritePacker** is a Python tool that converts individual images, tilesets, and SVG files into optimized spritesheets and ready-to-use Godot `.tres` resources:
 * [AtlasTextures](https://docs.godotengine.org/en/stable/classes/class_atlastexture.html) for single sprites  
 * [SpriteFrames](https://docs.godotengine.org/en/stable/classes/class_spriteframes.html) for animations
 
-It intelligently splits, trims and packs images or vector layers into one or more texture atlases, preserving your folder structure and optionally generating [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json` files or native Godot resources. [View PixiJS example spritesheet](https://github.com/Donitzo/godot-universal-spritepacker/blob/main/sample/output/spritesheet.json)
+It intelligently splits, trims and packs rasterized artwork into one or more texture atlases, preserving your folder structure and optionally generating [PixiJS-compatible](https://github.com/pixijs/pixijs/blob/main/packages/spritesheet/src/Spritesheet.ts) `.json` files or native Godot resources. [View PixiJS example spritesheet](https://github.com/Donitzo/godot-universal-spritepacker/blob/main/sample/output/spritesheet.json)
 
 ![Example](https://raw.githubusercontent.com/Donitzo/godot-universal-spritepacker/main/example.png)
 
@@ -42,7 +42,7 @@ I hope this tool helps simplify your 2D asset workflow too!
 The tool follows these steps:
 
 1. Scans the specified `source_directory` (and subdirectories) for images files (`'.png'`, `'.bmp'`, `'.jpg'`, `'.jpeg'`) and vector files (`.svg`).
-2. Parses filenames to detect optional suffixes indicating tile size, frame rate, padding, etc.
+2. Parses filenames to detect optional suffixes indicating tile size, frame rate, padding, etc..
 3. Splits images into individual sprites based on the specified tile size.
    - If the file is an SVG, each **layer** is exported as a separate sprite using [Inkscape](https://inkscape.org/).
 4. Optionally checks for the existence of a `.csv` file with multiple animation definitions for a single image.
@@ -68,6 +68,7 @@ boss_turret__WxH[pN][fpsN][loop]
 
 - `background.png` - Treats the entire image as one sprite.
 - `hero__32x32.png` - Splits the image into multiple 32x32 sprites.
+- `ball__16x16.svg` - Rasterizes the SVG at the specified DPI, then splits the resulting image into 16x16 sprites.
 - `Small Spider__64x64p2fps12loop.png` - 64×64 sprite with 2px padding, 12 FPS animation, looping
 
 | Field   | Description                                                 |
@@ -82,7 +83,7 @@ If the source file is located inside a subfolder, the relative path is included 
 
 Sprites are named using the format `subfolder_a/subfolder_b/original_name__RxC`, where `R` is the row index and `C` is the column index. Rows and columns are intentionally inverted from standard grid notation so that alphabetical sorting orders sprites left to right.
 
-> **Note:** SVG files are always exported as individual sprites based on layer and the pixel resolution defined in the file. The filename is ignored.
+> **Note:** SVG files are rasterized using Inkscape before processing. They follow the same filename conventions as raster images, with tile dimensions and padding specified in pixels of the rasterized image. Use `--svg_dpi` to control the rasterization resolution (default: 96 DPI).
 
 ---
 
@@ -115,7 +116,7 @@ Jump;       0;       1;       4;       1;  12; false
 ## Requirements
 
 - Python 3.9+
-- [Inkscape](https://inkscape.org/) (optional, for SVG layer processing)
+- [Inkscape](https://inkscape.org/) (required for SVG rasterization)
   If Inkscape is not installed at the default path, set it manually using `--inkscape_path`.
 - Requires the Pillow and [rectpack](https://github.com/secnot/rectpack) modules.
 
@@ -168,8 +169,8 @@ godot_universal_spritepacker --source_directory <source_dir> --spritesheet_path 
 | `--image_directory`          | Directory to save individual sprite images before packing.                                      |
 | `--godot_sprites_directory`  | Directory to output Godot `.tres` resource files.                                               |
 | `--godot_resource_directory` | Internal Godot resource directory for spritesheets (default: `res://textures/`).                |
-| `--inkscape_path`            | Custom path to the Inkscape executable for SVG processing.                                      |
-| `--convert_svg_to_png`       | Convert `.svg` files into `.png`  in the same directory before packing. Disables layer exports. |
+| `--inkscape_path`            | Custom path to the Inkscape executable for SVG rasterization.                                   |
+| `--svg_dpi`                  | DPI used when rasterizing SVG files (default: `96`).                                            |
 | `--max_spritesheet_size`     | Maximum width/height for each spritesheet (default: `4096`).                                    |
 | `--sprite_padding`           | Transparent pixels around each sprite. Default is `1` = 2 pixel total gap.                      |
 | `--disable_trimming`         | If set, disables sprite transparency trimming.                                                  |
