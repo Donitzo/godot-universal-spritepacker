@@ -119,7 +119,7 @@ def main() -> None:
     parser.add_argument('--godot_resource_directory', default='res://textures/',
         help='Godot resource directory containing spritesheet images. Default is "res://textures/"')
     parser.add_argument('--inkscape_path', default='C:/Program Files/Inkscape/bin/inkscape',
-        help='Path to the Inkscape executable. Used for extracting layers from SVG files.')
+        help='Path to the Inkscape executable. Used for rasterizing SVG files.')
     parser.add_argument('--svg_dpi', type=int, default=96,
         help='The DPI used when converting .svg files into .png files.')
     parser.add_argument('--max_spritesheet_size', type=int, default=4096,
@@ -176,11 +176,23 @@ def main() -> None:
 
             # SVG: convert to a temporary .PNG
             temp_image_path: Optional[str] = None
+            svg_viewbox: Optional[Tuple[float, float]] = None
 
             if extension.lower() == '.svg':
                 print('Converting vector file "%s"' % source_path)
 
                 temp_image_path = os.path.join(tempfile.gettempdir(), 'gus_%s.png' % os.urandom(32).hex())
+
+                # Get the viewbox to get the image size
+                view_box: Optional[str] = ET.parse(source_path).getroot().get('viewBox')
+                if view_box is None:
+                    print('SVG is missing viewBox')
+                    continue
+                view_box_values: List[float] = [float(value) for value in re.split(r'[\s,]+', view_box.strip())]
+                if len(view_box_values) != 4 or view_box_values[2] <= 0 or view_box_values[3] <= 0:
+                    print('SVG has an invalid viewBox')
+                    continue
+                svg_viewbox = (view_box_values[2], view_box_values[3])
 
                 try:
                     result: subprocess.CompletedProcess = subprocess.run([
@@ -199,7 +211,6 @@ def main() -> None:
                     sys.exit('Error exporting SVG "%s" as PNG' % source_path)
 
                 source_path = temp_image_path
-                extension = '.png'
 
             # Load image and remove temporary PNG
             im: Image.Image = Image.open(source_path).convert('RGBA')
@@ -239,13 +250,38 @@ def main() -> None:
 
             full_width, full_height = im.size
 
-            tile_width: int = int(groups[1]) # type: ignore[arg-type]
-            tile_height: int = int(groups[2]) # type: ignore[arg-type]
+            tile_width: int
+            tile_height: int
 
-            tile_padding: int = 0 if groups[3] is None else int(groups[3])
+            tile_padding: int
 
-            start_x: List[int] = list(range(0, full_width, tile_width + tile_padding))
-            start_y: List[int] = list(range(0, full_height, tile_height + tile_padding))
+            start_x: List[int]
+            start_y: List[int]
+
+            if svg_viewbox is not None:
+                scale_x: float = full_width / svg_viewbox[0]
+                scale_y: float = full_height / svg_viewbox[1]
+
+                source_width: int = int(groups[1]) # type: ignore[arg-type]
+                source_height: int = int(groups[2]) # type: ignore[arg-type]
+                source_padding: int = 0 if groups[3] is None else int(groups[3])
+
+                step_x: int = source_width + source_padding
+                step_y: int = source_height + source_padding
+
+                count_x: int = max(1, math.ceil(svg_viewbox[0] / step_x))
+                count_y: int = max(1, math.ceil(svg_viewbox[1] / step_y))
+
+                start_x = [round(i * step_x * scale_x) for i in range(count_x)]
+                start_y = [round(i * step_y * scale_y) for i in range(count_y)]
+            else:
+                tile_width = int(groups[1]) # type: ignore[arg-type]
+                tile_height = int(groups[2]) # type: ignore[arg-type]
+
+                tile_padding = 0 if groups[3] is None else int(groups[3])
+
+                start_x = list(range(0, full_width, tile_width + tile_padding))
+                start_y = list(range(0, full_height, tile_height + tile_padding))
 
             tileset_sprites: List[SpriteDict] = []
             tileset_grid: List[list[SpriteDict]] = [[] for _ in start_x]
@@ -257,7 +293,17 @@ def main() -> None:
                 for x_i, x in enumerate(start_x):
                     x_s: str = str(x_i).zfill(len(str(len(start_x) - 1)))
 
-                    new_image: Image.Image = im.crop((x, y, x + tile_width, y + tile_height))
+                    right: int
+                    bottom: int
+
+                    if svg_viewbox is not None:
+                        right = round((x_i * step_x + source_width) * scale_x)
+                        bottom = round((y_i * step_y + source_height) * scale_y)
+                    else:
+                        right = x + tile_width
+                        bottom = y + tile_height
+
+                    new_image: Image.Image = im.crop((x, y, right, bottom))
                     if groups[6] is not None:
                         new_image = postprocessor(new_image, x_i, y_i)
 
