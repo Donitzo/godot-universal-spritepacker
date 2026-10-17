@@ -479,7 +479,7 @@ def main() -> None:
             w, h = sprite['image'].size
 
             if w + padding * 2 > max_side or h + padding * 2 > max_side:
-                sys.exit('Sprite "%s" is too large' % sprite["name"])
+                sys.exit('Sprite "%s" is too large. Increase the texture atlas size.' % sprite["name"])
 
             packer.add_rect(w + padding * 2, h + padding * 2, sprite)
 
