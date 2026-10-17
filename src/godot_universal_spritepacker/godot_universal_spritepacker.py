@@ -212,6 +212,8 @@ def main() -> None:
 
                 source_path = temp_image_path
 
+                time.sleep(0.1)
+            
             # Load image and remove temporary PNG
             im: Image.Image = Image.open(source_path).convert('RGBA')
 
