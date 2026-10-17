@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "godot-universal-spritepacker"
-version = "1.4.0"
+version = "1.4.1"
 description = "A folder-aware sprite packer for Godot and PixiJS. Split, trim, and pack bitmap and SVG spritesheets into optimized atlases and native Godot resources."
 authors = [
     { name = "Donitz" }
